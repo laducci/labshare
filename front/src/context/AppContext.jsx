@@ -1,115 +1,71 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import { USERS, EQUIPMENTS, TENANTS } from '../data/mockData';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { api, definirSessao } from '../services/api';
 
+/**
+ * Estado global da aplicação: quem está logado e de qual cliente (tenant).
+ * Antes (protótipo) este arquivo guardava dados falsos em memória (mockData.js).
+ * Agora todos os dados vêm do backend; aqui fica apenas a sessão.
+ */
 const AppContext = createContext(null);
+const CHAVE_SESSAO = 'labshare.sessao';
 
-const initialReservation = {
-  equipmentId: 'arduino-uno',
-  startDate: '2025-08-20',
-  endDate: '2025-08-22',
-  status: 'Agendada',
-  userId: 'lucas',
-};
+function lerSessaoSalva() {
+  try {
+    const salva = JSON.parse(localStorage.getItem(CHAVE_SESSAO));
+    if (salva?.usuario && salva?.tenant) {
+      definirSessao(salva);
+      return salva;
+    }
+  } catch {
+    /* sem sessão salva */
+  }
+  return null;
+}
 
 export function AppProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [reservation, setReservation] = useState(null);
-  const [loanStatus, setLoanStatus] = useState('none'); // none | scheduled | in_use | returned
-  const [occurrence, setOccurrence] = useState(null);
-  const [equipments, setEquipments] = useState(EQUIPMENTS);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [sessao, setSessao] = useState(lerSessaoSalva);
 
-  const login = useCallback((userKey) => {
-    const u = USERS[userKey];
-    if (u) setUser(u);
+  const salvarSessao = useCallback((nova) => {
+    definirSessao(nova);
+    setSessao(nova);
+    try {
+      if (nova) localStorage.setItem(CHAVE_SESSAO, JSON.stringify(nova));
+      else localStorage.removeItem(CHAVE_SESSAO);
+    } catch {
+      /* navegador sem localStorage: segue só em memória */
+    }
   }, []);
 
-  const tenant = user ? TENANTS[user.tenantId] : null;
+  /** POST /api/auth/login -> { usuario, tenant } */
+  const login = useCallback(async (email, senha) => {
+    const resposta = await api.post('/auth/login', { email, senha });
+    salvarSessao(resposta);
+    return resposta.usuario;
+  }, [salvarSessao]);
 
+  const logout = useCallback(() => salvarSessao(null), [salvarSessao]);
+
+  /** Recarrega os recursos do cliente (usado depois de mudar a Personalização). */
+  const atualizarTenant = useCallback(async () => {
+    if (!sessao) return;
+    const tenant = await api.get('/tenants/atual');
+    salvarSessao({ ...sessao, tenant });
+  }, [sessao, salvarSessao]);
+
+  /** VARIABILIDADE: o cliente logado tem este recurso ligado? Ex.: hasFeature('lateFee') */
   const hasFeature = useCallback(
-    (featureKey) => Boolean(tenant?.features?.[featureKey]),
-    [tenant]
+    (recurso) => Boolean(sessao?.tenant?.features?.[recurso]),
+    [sessao]
   );
 
-  const logout = useCallback(() => {
-    setUser(null);
-  }, []);
-
-  const createReservation = useCallback((data) => {
-    setReservation({ ...initialReservation, ...data, status: 'Agendada' });
-    setLoanStatus('scheduled');
-  }, []);
-
-  const confirmPickup = useCallback(() => {
-    setReservation((prev) => {
-      const base = prev || { ...initialReservation };
-      return { ...base, status: 'Em uso' };
-    });
-    setLoanStatus('in_use');
-    setEquipments((prev) =>
-      prev.map((eq) =>
-        eq.id === 'arduino-uno' ? { ...eq, status: 'Em uso' } : eq
-      )
-    );
-  }, []);
-
-  const confirmReturn = useCallback((observations) => {
-    setReservation((prev) => (prev ? { ...prev, status: 'Finalizada' } : prev));
-    setLoanStatus('returned');
-    setOccurrence({
-      equipmentId: 'arduino-uno',
-      problem: observations || 'Sensor ultrassônico com falha no Trigger.',
-      date: '22/08/2025',
-      status: 'Aguardando manutenção',
-      responsible: 'A definir',
-    });
-    setEquipments((prev) =>
-      prev.map((eq) =>
-        eq.id === 'arduino-uno' ? { ...eq, status: 'Em manutenção' } : eq
-      )
-    );
-  }, []);
-
-  const completeMaintenance = useCallback(() => {
-    setOccurrence(null);
-    setEquipments((prev) =>
-      prev.map((eq) =>
-        eq.id === 'arduino-uno' ? { ...eq, status: 'Disponível' } : eq
-      )
-    );
-  }, []);
-
-  const updateEquipment = useCallback((id, data) => {
-    setEquipments((prev) =>
-      prev.map((eq) => (eq.id === id ? { ...eq, ...data } : eq))
-    );
-  }, []);
-
-  const addEquipment = useCallback((data) => {
-    const id = data.name.toLowerCase().replace(/\s+/g, '-');
-    setEquipments((prev) => [...prev, { ...data, id }]);
-  }, []);
-
-  const value = {
-    user,
+  const value = useMemo(() => ({
+    user: sessao?.usuario || null,
+    tenant: sessao?.tenant || null,
     login,
     logout,
-    tenant,
     hasFeature,
-    reservation,
-    setReservation,
-    createReservation,
-    loanStatus,
-    confirmPickup,
-    confirmReturn,
-    occurrence,
-    completeMaintenance,
-    equipments,
-    updateEquipment,
-    addEquipment,
-    searchQuery,
-    setSearchQuery,
-  };
+    atualizarTenant,
+  }), [sessao, login, logout, hasFeature, atualizarTenant]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
@@ -118,21 +74,4 @@ export function useApp() {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error('useApp must be used within AppProvider');
   return ctx;
-}
-
-export function formatDateBR(dateStr) {
-  if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-');
-  return `${d}/${m}/${y}`;
-}
-
-export function daysBetween(start, end) {
-  const s = new Date(start);
-  const e = new Date(end);
-  const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24)) + 1;
-  return diff;
-}
-
-export function getEquipmentById(id, equipments) {
-  return equipments.find((eq) => eq.id === id);
 }

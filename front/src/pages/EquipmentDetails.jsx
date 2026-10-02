@@ -1,21 +1,26 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
-import { useApp, getEquipmentById } from '../context/AppContext';
+import { ErrorState, LoadingState } from '../components/States';
+import { useApp } from '../context/AppContext';
+import { useApi } from '../hooks/useApi';
+import { formatDateTimeBR, SOLICITANTES } from '../utils/format';
+
+const NAO_RESERVAVEL = ['Em manutenção', 'Indisponível', 'Em inspeção'];
 
 export default function EquipmentDetails() {
   const { id } = useParams();
-  const { equipments } = useApp();
+  const { user } = useApp();
   const navigate = useNavigate();
-  const equipment = getEquipmentById(id, equipments);
+  const { dados: equipamento, carregando, erro } = useApi(`/equipamentos/${id}`);
+  const ehEquipe = ['admin', 'tecnico', 'manutencao'].includes(user.perfil);
+  // RF25: histórico do equipamento (só para a equipe)
+  const historico = useApi(ehEquipe ? `/historico?entidade=equipamento&entidadeId=${id}` : null);
 
-  if (!equipment) {
-    return (
-      <Layout>
-        <p>Equipamento não encontrado.</p>
-      </Layout>
-    );
-  }
+  if (carregando) return <Layout><LoadingState /></Layout>;
+  if (erro || !equipamento) return <Layout><ErrorState mensagem={erro || 'Equipamento não encontrado.'} /></Layout>;
+
+  const podeReservar = SOLICITANTES.includes(user.perfil) && !NAO_RESERVAVEL.includes(equipamento.status);
 
   return (
     <Layout>
@@ -26,52 +31,67 @@ export default function EquipmentDetails() {
 
       <div className="detail-layout">
         <div>
-          <img src={equipment.image} alt={equipment.name} className="detail-image" />
+          {equipamento.imagemUrl && <img src={equipamento.imagemUrl} alt={equipamento.nome} className="detail-image" />}
         </div>
         <div>
-          <StatusBadge status={equipment.status} />
-          <h2 className="detail-name">{equipment.name}</h2>
-          <p className="detail-description">{equipment.description}</p>
+          <StatusBadge status={equipamento.status} />
+          <h2 className="detail-name">{equipamento.nome}</h2>
+          <p className="detail-description">{equipamento.descricao}</p>
 
           <div className="detail-meta-grid">
-            <div className="detail-meta">
-              <span className="detail-meta__label">Categoria</span>
-              <span className="detail-meta__value">{equipment.category}</span>
-            </div>
-            <div className="detail-meta">
-              <span className="detail-meta__label">Patrimônio</span>
-              <span className="detail-meta__value">{equipment.patrimonio}</span>
-            </div>
-            <div className="detail-meta">
-              <span className="detail-meta__label">Localização</span>
-              <span className="detail-meta__value">{equipment.local}</span>
-            </div>
-            <div className="detail-meta">
-              <span className="detail-meta__label">Status</span>
-              <span className="detail-meta__value">{equipment.status}</span>
-            </div>
+            <div className="detail-meta"><span className="detail-meta__label">Categoria</span><span className="detail-meta__value">{equipamento.categoriaNome}</span></div>
+            <div className="detail-meta"><span className="detail-meta__label">Patrimônio</span><span className="detail-meta__value">{equipamento.patrimonio || '—'}</span></div>
+            <div className="detail-meta"><span className="detail-meta__label">Localização</span><span className="detail-meta__value">{equipamento.localNome || '—'}</span></div>
+            <div className="detail-meta"><span className="detail-meta__label">Status</span><span className="detail-meta__value">{equipamento.status}</span></div>
           </div>
 
           <div className="detail-section included-panel">
             <h3>Itens inclusos</h3>
             <ul className="included-items">
-              {equipment.includedItems.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
+              {equipamento.itensInclusos.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
 
-          {equipment.status === 'Disponível' && (
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
-              onClick={() => navigate(`/equipamento/${id}/disponibilidade`)}
-            >
+          {podeReservar && (
+            <button type="button" className="btn btn-primary btn-block" onClick={() => navigate(`/equipamento/${id}/disponibilidade`)}>
               Ver disponibilidade
+            </button>
+          )}
+          {SOLICITANTES.includes(user.perfil) && !podeReservar && (
+            <div className="info-panel">Este equipamento não pode ser reservado no momento ({equipamento.status}).</div>
+          )}
+          {['admin', 'tecnico'].includes(user.perfil) && (
+            <button type="button" className="btn btn-secondary btn-block" onClick={() => navigate(`/equipamentos/${id}/editar`)}>
+              Editar equipamento
             </button>
           )}
         </div>
       </div>
+
+      {ehEquipe && (
+        <section className="content-section">
+          <div className="section-header"><h2 className="section-title">Histórico do equipamento</h2></div>
+          {(historico.dados || []).length === 0 ? (
+            <div className="empty-state">Sem movimentações registradas.</div>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead><tr><th>Data</th><th>Ação</th><th>Descrição</th><th>Usuário</th></tr></thead>
+                <tbody>
+                  {historico.dados.map((h) => (
+                    <tr key={h.id}>
+                      <td>{formatDateTimeBR(h.dataHora)}</td>
+                      <td>{h.acao}</td>
+                      <td>{h.descricao}</td>
+                      <td>{h.usuarioNome || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
     </Layout>
   );
 }

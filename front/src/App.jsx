@@ -1,6 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import CrudPage from './components/CrudPage';
+import { CRUDS } from './config/crudConfigs';
+import { rotaInicial, SOLICITANTES } from './utils/format';
 
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -12,10 +15,11 @@ import ConfirmReservation from './pages/ConfirmReservation';
 import ReservationSuccess from './pages/ReservationSuccess';
 import MyReservations from './pages/MyReservations';
 import ReservationDetail from './pages/ReservationDetail';
+import Notifications from './pages/Notifications';
+import Profile from './pages/Profile';
 import TechnicianPanel from './pages/TechnicianPanel';
 import RegisterPickup from './pages/RegisterPickup';
 import ActiveLoan from './pages/ActiveLoan';
-import ReturnNotification from './pages/ReturnNotification';
 import RegisterReturn from './pages/RegisterReturn';
 import Occurrence from './pages/Occurrence';
 import MaintenancePanel from './pages/MaintenancePanel';
@@ -24,81 +28,83 @@ import MaintenanceComplete from './pages/MaintenanceComplete';
 import EquipmentList from './pages/EquipmentList';
 import CreateEquipment from './pages/CreateEquipment';
 import EditEquipment from './pages/EditEquipment';
-import PlaceholderPage from './pages/PlaceholderPage';
 import ManagerPanel from './pages/ManagerPanel';
 import ApprovalDetail from './pages/ApprovalDetail';
 import LateFeePanel from './pages/LateFeePanel';
 import TenantSettings from './pages/TenantSettings';
+import Dashboard from './pages/Dashboard';
+
+const EQUIPE_MANUTENCAO = ['manutencao', 'admin'];
+
+/** Atalho: rota protegida por perfil (e opcionalmente por recurso do cliente). */
+const P = (roles, element, feature) => <ProtectedRoute roles={roles} feature={feature}>{element}</ProtectedRoute>;
+
+/** Garante que o CrudPage seja recriado ao trocar de cadastro no menu. */
+function Crud({ nome }) {
+  return <CrudPage key={nome} config={CRUDS[nome]} />;
+}
 
 function App() {
   const { user } = useApp();
-
-  const defaultRoute =
-    user?.role === 'tecnico'
-      ? '/tecnico/painel'
-      : user?.role === 'manutencao'
-        ? '/manutencao/painel'
-        : user?.role === 'admin'
-          ? '/admin/dashboard'
-          : user?.role === 'gestor'
-            ? '/gestor/painel'
-            : '/home';
+  const login = user ? <Navigate to={rotaInicial(user.perfil)} replace /> : <Login />;
 
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/prototipo" element={user ? <Navigate to={defaultRoute} replace /> : <Login />} />
+      <Route path="/login" element={login} />
+      <Route path="/prototipo" element={<Navigate to="/login" replace />} />
 
-      {/* Fluxo do Aluno – Lucas */}
-      <Route path="/home" element={<ProtectedRoute roles={['aluno']}><Home /></ProtectedRoute>} />
-      <Route path="/busca" element={<ProtectedRoute roles={['aluno']}><SearchResults /></ProtectedRoute>} />
-      <Route path="/equipamento/:id" element={<ProtectedRoute><EquipmentDetails /></ProtectedRoute>} />
-      <Route path="/equipamento/:id/disponibilidade" element={<ProtectedRoute roles={['aluno']}><Availability /></ProtectedRoute>} />
-      <Route path="/equipamento/:id/confirmar" element={<ProtectedRoute roles={['aluno']}><ConfirmReservation /></ProtectedRoute>} />
-      <Route path="/reserva-sucesso" element={<ProtectedRoute roles={['aluno']}><ReservationSuccess /></ProtectedRoute>} />
-      <Route path="/minhas-reservas" element={<ProtectedRoute roles={['aluno']}><MyReservations /></ProtectedRoute>} />
-      <Route path="/minhas-reservas/detalhe" element={<ProtectedRoute roles={['aluno']}><ReservationDetail /></ProtectedRoute>} />
-      <Route path="/historico" element={<ProtectedRoute roles={['aluno']}><PlaceholderPage title="Histórico" subtitle="Empréstimos anteriores" /></ProtectedRoute>} />
-      <Route path="/notificacao" element={<ProtectedRoute><ReturnNotification /></ProtectedRoute>} />
-      <Route path="/perfil" element={<ProtectedRoute roles={['aluno']}><PlaceholderPage title="Perfil" subtitle="Dados do usuário" /></ProtectedRoute>} />
+      {/* Aluno / Professor – Lucas */}
+      <Route path="/home" element={P(SOLICITANTES, <Home />)} />
+      <Route path="/busca" element={P(SOLICITANTES, <SearchResults />)} />
+      <Route path="/equipamento/:id" element={P(null, <EquipmentDetails />)} />
+      <Route path="/equipamento/:id/disponibilidade" element={P(SOLICITANTES, <Availability />)} />
+      <Route path="/equipamento/:id/confirmar" element={P(SOLICITANTES, <ConfirmReservation />)} />
+      <Route path="/reserva-sucesso/:id" element={P(SOLICITANTES, <ReservationSuccess />)} />
+      <Route path="/minhas-reservas" element={P(SOLICITANTES, <MyReservations />)} />
+      <Route path="/minhas-reservas/:id" element={P(SOLICITANTES, <ReservationDetail />)} />
+      <Route path="/historico" element={P(SOLICITANTES, <MyReservations somenteHistorico />)} />
+      <Route path="/notificacoes" element={P(null, <Notifications />)} />
+      <Route path="/perfil" element={P(null, <Profile />)} />
 
-      {/* Fluxo do Técnico – Carlos */}
-      <Route path="/tecnico/painel" element={<ProtectedRoute roles={['tecnico']}><TechnicianPanel /></ProtectedRoute>} />
-      <Route path="/tecnico/retirada" element={<ProtectedRoute roles={['tecnico']}><RegisterPickup /></ProtectedRoute>} />
-      <Route path="/tecnico/emprestimo-ativo" element={<ProtectedRoute roles={['tecnico']}><ActiveLoan /></ProtectedRoute>} />
-      <Route path="/tecnico/devolucao" element={<ProtectedRoute roles={['tecnico']}><RegisterReturn /></ProtectedRoute>} />
-      <Route path="/tecnico/ocorrencia" element={<ProtectedRoute roles={['tecnico']}><Occurrence /></ProtectedRoute>} />
-      <Route path="/tecnico/reservas" element={<ProtectedRoute roles={['tecnico']}><PlaceholderPage title="Reservas" subtitle="Todas as reservas" /></ProtectedRoute>} />
-      <Route path="/tecnico/retiradas" element={<ProtectedRoute roles={['tecnico']}><PlaceholderPage title="Retiradas" subtitle="Registro de retiradas" /></ProtectedRoute>} />
-      <Route path="/tecnico/devolucoes" element={<ProtectedRoute roles={['tecnico']}><PlaceholderPage title="Devoluções" subtitle="Registro de devoluções" /></ProtectedRoute>} />
-      <Route path="/tecnico/ocorrencias" element={<ProtectedRoute roles={['tecnico']}><Occurrence /></ProtectedRoute>} />
+      {/* Técnico – Carlos */}
+      <Route path="/tecnico/painel" element={P(['tecnico'], <TechnicianPanel />)} />
+      <Route path="/tecnico/retiradas" element={P(['tecnico'], <TechnicianPanel key="retiradas" filtro="retiradas" />)} />
+      <Route path="/tecnico/devolucoes" element={P(['tecnico'], <TechnicianPanel key="devolucoes" filtro="devolucoes" />)} />
+      <Route path="/tecnico/retirada/:reservaId" element={P(['tecnico'], <RegisterPickup />)} />
+      <Route path="/tecnico/emprestimo-ativo/:reservaId" element={P(['tecnico'], <ActiveLoan />)} />
+      <Route path="/tecnico/devolucao/:reservaId" element={P(['tecnico'], <RegisterReturn />)} />
+      <Route path="/tecnico/ocorrencia/:id" element={P(['tecnico'], <Occurrence />)} />
+      <Route path="/tecnico/ocorrencias" element={P(['tecnico'], <Crud nome="ocorrencias" />)} />
+      <Route path="/tecnico/reservas" element={P(['tecnico'], <Crud nome="reservas" />)} />
 
-      {/* Fluxo de Manutenção – Fernanda */}
-      <Route path="/manutencao/painel" element={<ProtectedRoute roles={['manutencao', 'admin']}><MaintenancePanel /></ProtectedRoute>} />
-      <Route path="/manutencao/lista" element={<ProtectedRoute roles={['manutencao', 'admin']}><MaintenancePanel /></ProtectedRoute>} />
-      <Route path="/manutencao/historico" element={<ProtectedRoute roles={['manutencao', 'admin']}><PlaceholderPage title="Histórico de manutenções" /></ProtectedRoute>} />
-      <Route path="/manutencao/equipamento/:id" element={<ProtectedRoute roles={['manutencao', 'admin']}><EquipmentMaintenance /></ProtectedRoute>} />
-      <Route path="/manutencao/concluida" element={<ProtectedRoute roles={['manutencao', 'admin']}><MaintenanceComplete /></ProtectedRoute>} />
+      {/* Manutenção – Fernanda */}
+      <Route path="/manutencao/painel" element={P(EQUIPE_MANUTENCAO, <MaintenancePanel />)} />
+      <Route path="/manutencao/historico" element={P(EQUIPE_MANUTENCAO, <Crud nome="manutencoesHistorico" />)} />
+      <Route path="/manutencao/:id" element={P(EQUIPE_MANUTENCAO, <EquipmentMaintenance />)} />
+      <Route path="/manutencao/:id/concluida" element={P(EQUIPE_MANUTENCAO, <MaintenanceComplete />)} />
 
-      {/* CRUD Equipamentos */}
-      <Route path="/equipamentos" element={<ProtectedRoute><EquipmentList /></ProtectedRoute>} />
-      <Route path="/equipamentos/novo" element={<ProtectedRoute roles={['admin', 'tecnico']}><CreateEquipment /></ProtectedRoute>} />
-      <Route path="/equipamentos/:id/editar" element={<ProtectedRoute roles={['admin', 'tecnico']}><EditEquipment /></ProtectedRoute>} />
+      {/* CRUD de Equipamentos (Laura) */}
+      <Route path="/equipamentos" element={P(null, <EquipmentList />)} />
+      <Route path="/equipamentos/novo" element={P(['admin', 'tecnico'], <CreateEquipment />)} />
+      <Route path="/equipamentos/:id/editar" element={P(['admin', 'tecnico'], <EditEquipment />)} />
 
-      {/* Admin */}
-      <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin']}><PlaceholderPage title="Dashboard" subtitle="Visão geral do sistema" /></ProtectedRoute>} />
-      <Route path="/admin/usuarios" element={<ProtectedRoute roles={['admin']}><PlaceholderPage title="Usuários" /></ProtectedRoute>} />
-      <Route path="/admin/categorias" element={<ProtectedRoute roles={['admin']}><PlaceholderPage title="Categorias" /></ProtectedRoute>} />
-      <Route path="/admin/locais" element={<ProtectedRoute roles={['admin']}><PlaceholderPage title="Locais" /></ProtectedRoute>} />
-      <Route path="/admin/reservas" element={<ProtectedRoute roles={['admin']}><PlaceholderPage title="Reservas" /></ProtectedRoute>} />
-      <Route path="/admin/relatorios" element={<ProtectedRoute roles={['admin']}><PlaceholderPage title="Relatórios" /></ProtectedRoute>} />
-      <Route path="/admin/multas" element={<ProtectedRoute roles={['admin']}><LateFeePanel /></ProtectedRoute>} />
-      <Route path="/admin/personalizacao" element={<ProtectedRoute roles={['admin']}><TenantSettings /></ProtectedRoute>} />
+      {/* Administração */}
+      <Route path="/admin/dashboard" element={P(['admin'], <Dashboard />)} />
+      <Route path="/admin/relatorios" element={P(['admin'], <Dashboard />)} />
+      <Route path="/admin/usuarios" element={P(['admin'], <Crud nome="usuarios" />)} />
+      <Route path="/admin/categorias" element={P(['admin'], <Crud nome="categorias" />)} />
+      <Route path="/admin/locais" element={P(['admin'], <Crud nome="locais" />)} />
+      <Route path="/admin/reservas" element={P(['admin'], <Crud nome="reservas" />)} />
+      <Route path="/admin/personalizacao" element={P(['admin'], <TenantSettings />)} />
+      {/* VARIABILIDADE: só existem para clientes com o recurso ligado */}
+      <Route path="/admin/multas" element={P(['admin'], <LateFeePanel />, 'lateFee')} />
+      <Route path="/admin/centros-custo" element={P(['admin'], <Crud nome="centrosCusto" />, 'costCenter')} />
 
-      {/* Fluxo do Gestor – Patrícia (cliente Empresa Corporativa) */}
-      <Route path="/gestor/painel" element={<ProtectedRoute roles={['gestor']}><ManagerPanel /></ProtectedRoute>} />
-      <Route path="/gestor/aprovacoes" element={<ProtectedRoute roles={['gestor']}><ManagerPanel /></ProtectedRoute>} />
-      <Route path="/gestor/aprovacoes/:id" element={<ProtectedRoute roles={['gestor']}><ApprovalDetail /></ProtectedRoute>} />
+      {/* Gestor – Patrícia (Empresa Corporativa) */}
+      <Route path="/gestor/painel" element={P(['gestor'], <ManagerPanel />, 'approvalRequired')} />
+      <Route path="/gestor/aprovacoes" element={P(['gestor'], <ManagerPanel />, 'approvalRequired')} />
+      <Route path="/gestor/aprovacoes/:id" element={P(['gestor'], <ApprovalDetail />, 'approvalRequired')} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

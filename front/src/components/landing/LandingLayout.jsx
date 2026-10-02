@@ -41,10 +41,10 @@ export default function LandingLayout({ children }) {
           </nav>
 
           <div className="landing-nav__actions">
-            <Link to="/prototipo" className="landing-btn landing-btn--outline">
+            <Link to="/login" className="landing-btn landing-btn--outline">
               Acessar protótipo
             </Link>
-            <Link to="/prototipo" className="landing-btn landing-btn--primary">
+            <Link to="/login" className="landing-btn landing-btn--primary">
               Entrar
             </Link>
             <button
@@ -66,7 +66,7 @@ export default function LandingLayout({ children }) {
             {link.label}
           </a>
         ))}
-        <Link to="/prototipo" onClick={closeMenu}>
+        <Link to="/login" onClick={closeMenu}>
           Acessar protótipo
         </Link>
       </nav>
@@ -82,7 +82,7 @@ export default function LandingLayout({ children }) {
           <p className="landing-footer__note">
             Projeto acadêmico — Design Thinking aplicado à gestão de laboratórios
           </p>
-          <Link to="/prototipo" className="landing-btn landing-btn--primary">
+          <Link to="/login" className="landing-btn landing-btn--primary">
             Ver protótipo navegável
           </Link>
         </div>

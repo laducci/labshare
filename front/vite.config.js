@@ -6,4 +6,10 @@ export default defineConfig({
   esbuild: {
     jsx: 'automatic',
   },
+  server: {
+    // Toda chamada para /api/... é repassada para o backend Java (Spring Boot)
+    proxy: {
+      '/api': 'http://localhost:8080',
+    },
+  },
 })

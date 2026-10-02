@@ -1,18 +1,22 @@
-# LabShare – Protótipo Navegável
+# LabShare – Frontend (React + Vite)
 
 Sistema de Gestão de Laboratórios e Empréstimo de Equipamentos.
 
-## Executar o protótipo
+## Executar
+
+O backend precisa estar rodando em `localhost:8080` (veja o README da raiz do repositório).
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abra [http://localhost:5173](http://localhost:5173) para a landing page do projeto.
+Abra [http://localhost:5173](http://localhost:5173).
 
 - **Landing (Design Thinking):** `/`
-- **Protótipo navegável:** `/prototipo`
+- **Login:** `/login` (usuários de demonstração com senha `123456`)
+
+Todos os dados vêm da API (`src/services/api.js`). O Vite repassa `/api` para o backend (`vite.config.js`).
 
 ## Fluxo principal (Lucas – Aluno)
 

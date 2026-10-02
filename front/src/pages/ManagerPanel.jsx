@@ -1,51 +1,48 @@
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
-import { APPROVAL_REQUESTS, COST_CENTERS } from '../data/mockData';
+import { EmptyState, ErrorState, LoadingState } from '../components/States';
 import { useApp } from '../context/AppContext';
+import { useApi } from '../hooks/useApi';
+import { formatDateBR } from '../utils/format';
 
+/** VARIABILIDADE: tela e perfil que só existem para clientes com "approvalRequired". */
 export default function ManagerPanel() {
-  const { user } = useApp();
+  const { user, tenant } = useApp();
   const navigate = useNavigate();
-
-  const pending = APPROVAL_REQUESTS.filter((r) => r.status === 'Pendente');
-
-  const costCenterName = (id) => COST_CENTERS.find((c) => c.id === id)?.name || id;
+  const { dados, carregando, erro } = useApi('/reservas?status=AGUARDANDO_APROVACAO');
+  const pendentes = dados || [];
 
   return (
     <Layout>
       <h1 className="page-title">Painel do Gestor</h1>
-      <p className="page-subtitle">{user?.name} · Empresa Corporativa</p>
+      <p className="page-subtitle">{user.nome} · {tenant.nome}</p>
 
-      <div className="empty-state" style={{ background: 'var(--color-bg)', textAlign: 'left', marginBottom: '1.5rem' }}>
-        <strong>Recurso exclusivo deste cliente:</strong> nas empresas corporativas, toda
-        retirada de equipamento passa por aprovação do gestor responsável pelo centro de
-        custo antes de ser liberada ao técnico. Alunos de universidades e escolas técnicas
-        não veem esta etapa.
+      <div className="info-panel" style={{ marginBottom: '1.5rem' }}>
+        <strong>Recurso exclusivo deste cliente:</strong> toda retirada de equipamento passa por aprovação do
+        gestor responsável pelo centro de custo antes de ser liberada ao técnico. Na Universidade e na Escola
+        Técnica esta etapa não existe (estratégia AprovacaoAutomatica).
       </div>
 
-      <h2 className="section-title">Solicitações aguardando aprovação ({pending.length})</h2>
+      <h2 className="section-title">Solicitações aguardando aprovação ({pendentes.length})</h2>
+      {carregando && <LoadingState />}
+      <ErrorState mensagem={erro} />
+      {!carregando && pendentes.length === 0 && <EmptyState>Nenhuma solicitação pendente.</EmptyState>}
 
-      {pending.length === 0 ? (
-        <div className="empty-state">Nenhuma solicitação pendente.</div>
-      ) : (
-        <div style={{ display: 'grid', gap: '1rem' }}>
-          {pending.map((req) => (
-            <div key={req.id} className="card card-clickable" onClick={() => navigate(`/gestor/aprovacoes/${req.id}`)}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className="reservation-card__equipment">{req.equipmentName}</div>
-                <StatusBadge status={req.status} />
-              </div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', margin: '0.5rem 0' }}>
-                Solicitante: {req.requester}
-              </p>
-              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
-                Centro de custo: {costCenterName(req.costCenter)}
-              </p>
+      <div style={{ display: 'grid', gap: '1rem' }}>
+        {pendentes.map((r) => (
+          <div key={r.id} className="card card-clickable" role="button" tabIndex={0} onClick={() => navigate(`/gestor/aprovacoes/${r.id}`)}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="reservation-card__equipment">{r.equipamentoNome}</div>
+              <StatusBadge status={r.status} />
             </div>
-          ))}
-        </div>
-      )}
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', margin: '0.5rem 0' }}>
+              Solicitante: {r.usuarioNome} · {formatDateBR(r.dataInicio)} a {formatDateBR(r.dataFim)}
+            </p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Centro de custo: {r.centroCustoNome || '—'}</p>
+          </div>
+        ))}
+      </div>
     </Layout>
   );
 }

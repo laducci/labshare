@@ -1,0 +1,8 @@
+# Copie este arquivo para "db.properties" (na mesma pasta) e preencha com os dados do Neon.
+# No painel do Neon: Dashboard > Connection Details > escolha "Java" ou copie a connection string.
+#
+# Connection string do Neon:  postgresql://USUARIO:SENHA@ep-xxxx.sa-east-1.aws.neon.tech/neondb?sslmode=require
+# Vira (JDBC):
+DB_URL=jdbc:postgresql://ep-xxxx.sa-east-1.aws.neon.tech/neondb?sslmode=require
+DB_USER=USUARIO
+DB_PASSWORD=SENHA

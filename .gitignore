@@ -2,3 +2,10 @@ node_modules
 dist
 .DS_Store
 *.local
+backend/target/
+backend/db.properties
+.idea/
+
+# Material interno da equipe (guia de estudo, roteiro do vídeo)
+docs/
+.vscode/settings.json

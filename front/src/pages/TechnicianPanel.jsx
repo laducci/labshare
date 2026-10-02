@@ -1,110 +1,115 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, BellRing, Clock } from 'lucide-react';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
-import { Calendar, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Package } from 'lucide-react';
-import { useApp, getEquipmentById, formatDateBR } from '../context/AppContext';
-import { USERS } from '../data/mockData';
+import { EmptyState, ErrorState, LoadingState, SuccessMessage } from '../components/States';
+import { useApp } from '../context/AppContext';
+import { useApi } from '../hooks/useApi';
+import { api } from '../services/api';
+import { formatDateBR, isoDate } from '../utils/format';
 
-export default function TechnicianPanel() {
-  const { reservation, loanStatus, equipments } = useApp();
+/**
+ * Painel do técnico. O mesmo componente atende 3 rotas (reuso):
+ *  /tecnico/painel (tudo), /tecnico/retiradas (só agendadas), /tecnico/devolucoes (só em uso)
+ */
+export default function TechnicianPanel({ filtro = 'todos' }) {
+  const { user } = useApp();
   const navigate = useNavigate();
+  // GET /api/reservas?status=AGENDADA,EM_USO
+  const { dados, carregando, erro, recarregar } = useApi('/reservas?status=AGENDADA,EM_USO');
+  const ocorrencias = useApi('/ocorrencias/abertas');
+  const [mensagem, setMensagem] = useState(null);
 
-  const equipment = getEquipmentById('arduino-uno', equipments);
-  const showDemoReservation = !reservation && loanStatus === 'none';
-  const hasReservation = reservation || loanStatus !== 'none' || showDemoReservation;
+  const reservas = dados || [];
+  const hoje = isoDate(0);
+  const agendadas = reservas.filter((r) => r.status === 'Agendada');
+  const emUso = reservas.filter((r) => r.status === 'Em uso');
+  const atrasadas = emUso.filter((r) => r.dataFim < hoje);
+  const lista = filtro === 'retiradas' ? agendadas : filtro === 'devolucoes' ? emUso : reservas;
+
+  /** POST /api/notificacoes/lembretes -> Template Method LembreteDevolucao */
+  const enviarLembretes = async () => {
+    try {
+      const r = await api.post('/notificacoes/lembretes');
+      setMensagem(`${r.enviados} lembrete(s) de devolução enviado(s).`);
+    } catch (e) {
+      setMensagem(e.message);
+    }
+  };
+
+  const titulos = { todos: 'Painel do Técnico', retiradas: 'Retiradas pendentes', devolucoes: 'Devoluções previstas' };
 
   return (
-    <Layout>
-      <div className="page-header">
-        <h1 className="page-title">Painel do Técnico</h1>
-        <p className="page-subtitle">{USERS.carlos.name} · Operações de hoje</p>
+    <Layout fullWidth>
+      <div className="page-header-row">
+        <div>
+          <h1 className="page-title">{titulos[filtro]}</h1>
+          <p className="page-subtitle">{user.nome} · Operações do laboratório</p>
+        </div>
+        <button type="button" className="btn btn-secondary" onClick={enviarLembretes}>
+          <BellRing size={18} /> Enviar lembretes de devolução
+        </button>
       </div>
+      <SuccessMessage mensagem={mensagem} />
 
-      <div className="metric-grid">
-        {[
-          { label: 'Reservas hoje', value: hasReservation ? '1' : '0', icon: Calendar },
-          { label: 'Retiradas pendentes', value: loanStatus === 'none' || loanStatus === 'scheduled' ? '1' : '0', icon: ArrowDownToLine },
-          { label: 'Devoluções previstas', value: loanStatus === 'in_use' ? '1' : '0', icon: ArrowUpFromLine },
-          { label: 'Ocorrências abertas', value: '0', icon: AlertTriangle },
-        ].map(({ label, value, icon: Icon }) => (
-          <div className="metric-card" key={label}>
-            <span className="metric-card__icon"><Icon size={19} /></span>
-            <span>
-              <strong className="metric-card__value">{value}</strong>
-              <span className="metric-card__label">{label}</span>
-            </span>
-          </div>
-        ))}
-      </div>
+      {filtro === 'todos' && (
+        <div className="metric-grid">
+          {[
+            { label: 'Retiradas pendentes', value: agendadas.length, icon: ArrowDownToLine },
+            { label: 'Equipamentos em uso', value: emUso.length, icon: ArrowUpFromLine },
+            { label: 'Devoluções atrasadas', value: atrasadas.length, icon: Clock },
+            { label: 'Ocorrências abertas', value: (ocorrencias.dados || []).length, icon: AlertTriangle },
+          ].map(({ label, value, icon: Icon }) => (
+            <div className="metric-card" key={label}>
+              <span className="metric-card__icon"><Icon size={19} /></span>
+              <span>
+                <strong className="metric-card__value">{value}</strong>
+                <span className="metric-card__label">{label}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <section className="content-section">
-        <div className="section-header">
-          <h2 className="section-title">Reservas de hoje</h2>
-        </div>
-
-        {hasReservation ? (
+        {carregando && <LoadingState />}
+        <ErrorState mensagem={erro} onTentarNovamente={recarregar} />
+        {!carregando && lista.length === 0 && <EmptyState>Nenhuma reserva aguardando ação.</EmptyState>}
+        {lista.length > 0 && (
           <div className="table-wrap">
             <table className="data-table">
               <thead>
-                <tr>
-                  <th>Usuário</th>
-                  <th>Equipamento</th>
-                  <th>Horário</th>
-                  <th>Status</th>
-                  <th>Ação</th>
-                </tr>
+                <tr><th>Usuário</th><th>Equipamento</th><th>Período</th><th>Status</th><th>Ação</th></tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>{USERS.lucas.name}</td>
-                  <td>{equipment?.name || 'Kit Arduino Uno'}</td>
-                  <td>{formatDateBR(reservation?.startDate || '2025-08-20')} · 09:00</td>
-                  <td>
-                    <StatusBadge status={loanStatus === 'in_use' ? 'Em uso' : reservation?.status || 'Agendada'} />
-                  </td>
-                  <td>
-                    {(loanStatus !== 'in_use' && loanStatus !== 'returned') || showDemoReservation ? (
-                      <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/tecnico/retirada')}>
-                        Registrar retirada
-                      </button>
-                    ) : null}
-                    {loanStatus === 'in_use' && !showDemoReservation && (
-                      <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/tecnico/devolucao')}>
-                        Registrar devolução
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                {lista.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.usuarioNome}</td>
+                    <td>{r.equipamentoNome}</td>
+                    <td>
+                      {formatDateBR(r.dataInicio)} a {formatDateBR(r.dataFim)}
+                      {r.status === 'Em uso' && r.dataFim < hoje && <span className="badge badge-error" style={{ marginLeft: 6 }}>Atrasada</span>}
+                    </td>
+                    <td><StatusBadge status={r.status} /></td>
+                    <td>
+                      {r.status === 'Agendada' ? (
+                        <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate(`/tecnico/retirada/${r.id}`)}>
+                          Registrar retirada
+                        </button>
+                      ) : (
+                        <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate(`/tecnico/devolucao/${r.id}`)}>
+                          Registrar devolução
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        ) : (
-          <div className="empty-state">Nenhuma reserva para hoje.</div>
         )}
       </section>
-
-      <div className="shortcuts-grid">
-        <a href="/tecnico/reservas" className="shortcut-card" onClick={(e) => { e.preventDefault(); navigate('/tecnico/reservas'); }}>
-          <div className="shortcut-card__icon"><Calendar size={24} /></div>
-          <div className="shortcut-card__label">Reservas</div>
-        </a>
-        <a href="/tecnico/retiradas" className="shortcut-card" onClick={(e) => { e.preventDefault(); navigate('/tecnico/retiradas'); }}>
-          <div className="shortcut-card__icon"><ArrowDownToLine size={24} /></div>
-          <div className="shortcut-card__label">Retiradas</div>
-        </a>
-        <a href="/tecnico/devolucoes" className="shortcut-card" onClick={(e) => { e.preventDefault(); navigate('/tecnico/devolucoes'); }}>
-          <div className="shortcut-card__icon"><ArrowUpFromLine size={24} /></div>
-          <div className="shortcut-card__label">Devoluções</div>
-        </a>
-        <a href="/tecnico/ocorrencias" className="shortcut-card" onClick={(e) => { e.preventDefault(); navigate('/tecnico/ocorrencias'); }}>
-          <div className="shortcut-card__icon"><AlertTriangle size={24} /></div>
-          <div className="shortcut-card__label">Ocorrências</div>
-        </a>
-        <a href="/equipamentos" className="shortcut-card" onClick={(e) => { e.preventDefault(); navigate('/equipamentos'); }}>
-          <div className="shortcut-card__icon"><Package size={24} /></div>
-          <div className="shortcut-card__label">Equipamentos</div>
-        </a>
-      </div>
     </Layout>
   );
 }

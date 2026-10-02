@@ -19,18 +19,29 @@ import {
   ClipboardCheck,
   Receipt,
   SlidersHorizontal,
+  Landmark,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { PERFIS } from '../utils/format';
+
+/**
+ * Ativo reutilizável nº 2: menu baseado em configuração.
+ * - "perfil" decide quais itens aparecem (aluno, técnico...)
+ * - "feature" esconde itens de módulos que o cliente não tem (VARIABILIDADE)
+ * Para um novo cliente/módulo basta acrescentar uma linha aqui.
+ */
+const MENU_SOLICITANTE = [
+  { path: '/home', label: 'Início', icon: Home },
+  { path: '/equipamentos', label: 'Equipamentos', icon: Package },
+  { path: '/minhas-reservas', label: 'Minhas reservas', icon: Calendar },
+  { path: '/historico', label: 'Histórico', icon: History },
+  { path: '/notificacoes', label: 'Notificações', icon: Bell },
+  { path: '/perfil', label: 'Perfil', icon: User },
+];
 
 const MENUS = {
-  aluno: [
-    { path: '/home', label: 'Início', icon: Home },
-    { path: '/equipamentos', label: 'Equipamentos', icon: Package },
-    { path: '/minhas-reservas', label: 'Minhas reservas', icon: Calendar },
-    { path: '/historico', label: 'Histórico', icon: History },
-    { path: '/notificacao', label: 'Notificações', icon: Bell },
-    { path: '/perfil', label: 'Perfil', icon: User },
-  ],
+  aluno: MENU_SOLICITANTE,
+  professor: MENU_SOLICITANTE,
   tecnico: [
     { path: '/tecnico/painel', label: 'Painel', icon: LayoutDashboard },
     { path: '/tecnico/reservas', label: 'Reservas', icon: Calendar },
@@ -38,17 +49,18 @@ const MENUS = {
     { path: '/tecnico/devolucoes', label: 'Devoluções', icon: ArrowUpFromLine },
     { path: '/equipamentos', label: 'Equipamentos', icon: Package },
     { path: '/tecnico/ocorrencias', label: 'Ocorrências', icon: AlertTriangle },
+    { path: '/notificacoes', label: 'Notificações', icon: Bell },
   ],
   manutencao: [
     { path: '/manutencao/painel', label: 'Painel', icon: LayoutDashboard },
-    { path: '/manutencao/lista', label: 'Manutenções', icon: Wrench },
     { path: '/manutencao/historico', label: 'Histórico', icon: History },
     { path: '/equipamentos', label: 'Equipamentos', icon: Package },
+    { path: '/notificacoes', label: 'Notificações', icon: Bell },
   ],
   gestor: [
-    { path: '/gestor/painel', label: 'Painel', icon: LayoutDashboard },
-    { path: '/gestor/aprovacoes', label: 'Aprovações', icon: ClipboardCheck },
+    { path: '/gestor/painel', label: 'Aprovações', icon: ClipboardCheck, feature: 'approvalRequired' },
     { path: '/equipamentos', label: 'Equipamentos', icon: Package },
+    { path: '/notificacoes', label: 'Notificações', icon: Bell },
   ],
   admin: [
     { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -58,18 +70,10 @@ const MENUS = {
     { path: '/admin/locais', label: 'Locais', icon: MapPin },
     { path: '/admin/reservas', label: 'Reservas', icon: Calendar },
     { path: '/manutencao/painel', label: 'Manutenções', icon: Wrench },
-    { path: '/admin/relatorios', label: 'Relatórios', icon: BarChart3 },
+    { path: '/admin/centros-custo', label: 'Centros de custo', icon: Landmark, feature: 'costCenter' },
     { path: '/admin/multas', label: 'Multas', icon: Receipt, feature: 'lateFee' },
     { path: '/admin/personalizacao', label: 'Personalização', icon: SlidersHorizontal },
   ],
-};
-
-const ROLE_LABELS = {
-  aluno: 'Aluno',
-  tecnico: 'Técnico',
-  manutencao: 'Manutenção',
-  gestor: 'Gestor',
-  admin: 'Administrador',
 };
 
 export default function Sidebar({ mobileOpen, onClose }) {
@@ -79,13 +83,13 @@ export default function Sidebar({ mobileOpen, onClose }) {
 
   if (!user) return null;
 
-  const items = (MENUS[user.role] || MENUS.aluno).filter(
+  const items = (MENUS[user.perfil] || MENU_SOLICITANTE).filter(
     (item) => !item.feature || hasFeature(item.feature)
   );
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/login');
     onClose?.();
   };
 
@@ -125,10 +129,10 @@ export default function Sidebar({ mobileOpen, onClose }) {
             </button>
           </div>
           <div className="sidebar-profile">
-            <span className="sidebar-profile__avatar">{user.firstName.charAt(0)}</span>
+            <span className="sidebar-profile__avatar">{user.primeiroNome?.charAt(0)}</span>
             <span className="sidebar-profile__copy">
-              <span className="sidebar-profile__name">{user.name}</span>
-              <span className="sidebar-profile__role">{ROLE_LABELS[user.role] || user.role}</span>
+              <span className="sidebar-profile__name">{user.nome}</span>
+              <span className="sidebar-profile__role">{PERFIS[user.perfil] || user.perfil}</span>
             </span>
           </div>
         </div>

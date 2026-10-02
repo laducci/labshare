@@ -1,25 +1,42 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { USERS, EQUIPMENTS } from '../data/mockData';
-import { formatDateBR, useApp } from '../context/AppContext';
+import Checklist, { criarItens } from '../components/Checklist';
+import { ErrorState, LoadingState } from '../components/States';
+import { useApi } from '../hooks/useApi';
+import { api } from '../services/api';
+import { formatDateBR } from '../utils/format';
 
 export default function RegisterPickup() {
-  const equipment = EQUIPMENTS.find((eq) => eq.id === 'arduino-uno');
-  const [checked, setChecked] = useState(
-    Object.fromEntries(equipment.checklistItems.map((item) => [item, true]))
-  );
-  const [observations, setObservations] = useState('Tudo certo com os itens.');
-  const { confirmPickup, reservation } = useApp();
+  const { reservaId } = useParams();
   const navigate = useNavigate();
+  const reserva = useApi(`/reservas/${reservaId}`);
+  const equipamento = useApi(reserva.dados ? `/equipamentos/${reserva.dados.equipamentoId}` : null);
+  const [itens, setItens] = useState([]);
+  const [observacoes, setObservacoes] = useState('');
+  const [erro, setErro] = useState(null);
 
-  const toggleItem = (item) => {
-    setChecked((prev) => ({ ...prev, [item]: !prev[item] }));
-  };
+  // começa com tudo DESmarcado: o técnico confere item por item (RN05)
+  useEffect(() => {
+    if (equipamento.dados) setItens(criarItens(equipamento.dados.itensParaConferir, false));
+  }, [equipamento.dados]);
 
-  const handleConfirm = () => {
-    confirmPickup();
-    navigate('/tecnico/emprestimo-ativo');
+  if (reserva.carregando || equipamento.carregando) return <Layout><LoadingState /></Layout>;
+  if (reserva.erro) return <Layout><ErrorState mensagem={reserva.erro} /></Layout>;
+  const r = reserva.dados;
+
+  /**
+   * POST /api/emprestimos/{id}/retirada { itens, observacoes }
+   * -> ProcessoRetirada.executar (Template Method) -> reserva e equipamento "Em uso"
+   */
+  const confirmar = async () => {
+    setErro(null);
+    try {
+      await api.post(`/emprestimos/${reservaId}/retirada`, { itens, observacoes });
+      navigate(`/tecnico/emprestimo-ativo/${reservaId}`);
+    } catch (e) {
+      setErro(e.message);
+    }
   };
 
   return (
@@ -30,55 +47,22 @@ export default function RegisterPickup() {
       </div>
 
       <div className="card" style={{ maxWidth: '720px' }}>
+        <ErrorState mensagem={erro} />
         <div className="summary-box">
-          <div className="summary-row">
-            <span className="summary-label">Reserva</span>
-            <span className="summary-value">{equipment.name}</span>
-          </div>
-          <div className="summary-row">
-            <span className="summary-label">Usuário</span>
-            <span className="summary-value">{USERS.lucas.name}</span>
-          </div>
-          <div className="summary-row">
-            <span className="summary-label">Data</span>
-            <span className="summary-value">{formatDateBR(reservation?.startDate || '2025-08-20')}</span>
-          </div>
-          <div className="summary-row">
-            <span className="summary-label">Horário</span>
-            <span className="summary-value">09:00</span>
-          </div>
+          <div className="summary-row"><span className="summary-label">Equipamento</span><span className="summary-value">{r.equipamentoNome}</span></div>
+          <div className="summary-row"><span className="summary-label">Usuário</span><span className="summary-value">{r.usuarioNome}</span></div>
+          <div className="summary-row"><span className="summary-label">Período</span><span className="summary-value">{formatDateBR(r.dataInicio)} a {formatDateBR(r.dataFim)}</span></div>
         </div>
 
-        <h3 className="section-title">Checklist de itens</h3>
-        <ul className="checklist">
-          {equipment.checklistItems.map((item) => (
-            <li key={item} className="checklist-item">
-              <input
-                type="checkbox"
-                id={item}
-                checked={checked[item]}
-                onChange={() => toggleItem(item)}
-              />
-              <label htmlFor={item}>{item}</label>
-            </li>
-          ))}
-        </ul>
+        <h3 className="section-title">Checklist de itens ({itens.filter((i) => i.ok).length}/{itens.length})</h3>
+        <Checklist itens={itens} modo="retirada" onChange={setItens} />
 
         <div className="form-group" style={{ marginTop: '1.5rem' }}>
-          <label className="form-label" htmlFor="observations">
-            Observações (opcional)
-          </label>
-          <textarea
-            id="observations"
-            className="form-textarea"
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
-          />
+          <label className="form-label" htmlFor="observations">Observações (opcional)</label>
+          <textarea id="observations" className="form-textarea" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
         </div>
 
-        <button type="button" className="btn btn-primary btn-block" onClick={handleConfirm}>
-          Confirmar retirada
-        </button>
+        <button type="button" className="btn btn-primary btn-block" onClick={confirmar}>Confirmar retirada</button>
       </div>
     </Layout>
   );

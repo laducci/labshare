@@ -1,0 +1,146 @@
+-- ============================================================
+--  LabShare - dados de demonstração
+--  "ON CONFLICT DO NOTHING" = se o registro já existe, não insere de novo.
+--  Assim o backend pode reiniciar sem duplicar nada.
+--  Senha de TODOS os usuários: 123456 (guardada com hash BCrypt)
+-- ============================================================
+
+-- ---------- Clientes (tenants) ----------
+INSERT INTO tenant (id, nome, segmento) VALUES
+ ('universidade',   'Universidade Padrão', 'Educação'),
+ ('empresa',        'Empresa Corporativa', 'Corporativo'),
+ ('escola_tecnica', 'Escola Técnica',      'Educação Profissionalizante')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------- VARIABILIDADE: recursos ligados por cliente ----------
+INSERT INTO tenant_recurso (tenant_id, recurso, habilitado) VALUES
+ ('universidade',   'approvalRequired', FALSE),
+ ('universidade',   'costCenter',       FALSE),
+ ('universidade',   'lateFee',          FALSE),
+ ('empresa',        'approvalRequired', TRUE),
+ ('empresa',        'costCenter',       TRUE),
+ ('empresa',        'lateFee',          FALSE),
+ ('escola_tecnica', 'approvalRequired', FALSE),
+ ('escola_tecnica', 'costCenter',       FALSE),
+ ('escola_tecnica', 'lateFee',          TRUE)
+ON CONFLICT (tenant_id, recurso) DO NOTHING;
+
+-- ---------- Usuários (personas) ----------
+INSERT INTO usuario (id, tenant_id, nome, email, senha_hash, perfil) VALUES
+ (1,  'universidade',   'Lucas Almeida',    'lucas@email.com',          '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'aluno'),
+ (2,  'universidade',   'Carlos Ferreira',  'carlos@email.com',         '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'tecnico'),
+ (3,  'universidade',   'Fernanda Rocha',   'fernanda@email.com',       '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'manutencao'),
+ (4,  'universidade',   'Roberto Lima',     'roberto@email.com',        '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'admin'),
+ (5,  'universidade',   'Mariana Costa',    'mariana@email.com',        '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'aluno'),
+ (6,  'universidade',   'Ricardo Nunes',    'ricardo@email.com',        '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'professor'),
+ (7,  'empresa',        'Patrícia Souza',   'patricia@empresa.com',     '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'gestor'),
+ (8,  'empresa',        'Bruno Tavares',    'bruno@empresa.com',        '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'aluno'),
+ (9,  'empresa',        'Diego Martins',    'diego@empresa.com',        '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'tecnico'),
+ (10, 'empresa',        'Helena Duarte',    'helena@empresa.com',       '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'admin'),
+ (11, 'escola_tecnica', 'Vera Machado',     'vera@escolatecnica.com',   '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'admin'),
+ (12, 'escola_tecnica', 'Igor Salles',      'igor@escolatecnica.com',   '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'aluno'),
+ (13, 'escola_tecnica', 'Paulo Henrique',   'paulo@escolatecnica.com',  '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'tecnico')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------- Categorias ----------
+INSERT INTO categoria (id, tenant_id, nome, icone) VALUES
+ (1, 'universidade',   'Eletrônica',    'cpu'),
+ (2, 'universidade',   'Áudio e Vídeo', 'camera'),
+ (3, 'universidade',   'Informática',   'monitor'),
+ (4, 'universidade',   'Ferramentas',   'wrench'),
+ (5, 'empresa',        'Informática',   'monitor'),
+ (6, 'empresa',        'Áudio e Vídeo', 'camera'),
+ (7, 'escola_tecnica', 'Eletrônica',    'cpu'),
+ (8, 'escola_tecnica', 'Ferramentas',   'wrench')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------- Locais ----------
+INSERT INTO local (id, tenant_id, nome, descricao) VALUES
+ (1, 'universidade',   'Lab. Eletrônica – Sala 12', 'Bloco A, 1º andar'),
+ (2, 'universidade',   'Lab. Eletrônica – Sala 10', 'Bloco A, 1º andar'),
+ (3, 'universidade',   'Lab. Multimídia – Sala 5',  'Bloco C, térreo'),
+ (4, 'universidade',   'Sala Maker',                'Bloco B, 2º andar'),
+ (5, 'empresa',        'Almoxarifado de TI',        'Torre 1, 3º andar'),
+ (6, 'escola_tecnica', 'Oficina Técnica',           'Prédio principal')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------- Centros de custo (só a Empresa Corporativa usa) ----------
+INSERT INTO centro_custo (id, tenant_id, codigo, nome) VALUES
+ (1, 'empresa', 'CC-ENG', 'Engenharia de Produto'),
+ (2, 'empresa', 'CC-MKT', 'Marketing'),
+ (3, 'empresa', 'CC-TI',  'TI Interna')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------- Equipamentos ----------
+INSERT INTO equipamento (id, tenant_id, nome, descricao, patrimonio, status, categoria_id, local_id, imagem_url, itens_inclusos, itens_checklist) VALUES
+ (1, 'universidade', 'Kit Arduino Uno',
+  'Kit completo para desenvolvimento com Arduino Uno. Ideal para projetos de eletrônica e prototipagem.',
+  'PAT-2024-001', 'DISPONIVEL', 1, 1,
+  'https://images.unsplash.com/photo-1629654297299-c8500471aae0?w=400&h=300&fit=crop',
+  E'1x Placa Arduino Uno R3\n1x Cabo USB\nJumpers\nProtoboard\nLEDs\nResistores\nSensores',
+  E'Placa Arduino Uno\nCabo USB\nProtoboard\nSensores\nJumpers'),
+ (2, 'universidade', 'Kit Arduino Mega',
+  'Kit Arduino Mega 2560 para projetos avançados com mais pinos e memória.',
+  'PAT-2024-002', 'DISPONIVEL', 1, 1,
+  'https://images.unsplash.com/photo-1553406830-ef2513450d76?w=400&h=300&fit=crop',
+  E'1x Placa Arduino Mega\n1x Cabo USB\nJumpers\nProtoboard',
+  E'Placa Arduino Mega\nCabo USB\nProtoboard\nJumpers'),
+ (3, 'universidade', 'Shield Arduino Sensor',
+  'Shield com múltiplos sensores integrados para Arduino.',
+  'PAT-2024-003', 'INDISPONIVEL', 1, 1,
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop',
+  E'1x Shield Sensor\nCabos de conexão', E'Shield Sensor\nCabos'),
+ (4, 'universidade', 'Osciloscópio Digital',
+  'Osciloscópio digital de bancada 100MHz.',
+  'PAT-2024-010', 'DISPONIVEL', 1, 2,
+  'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop',
+  E'1x Osciloscópio\n2x Sondas\n1x Cabo USB', E'Osciloscópio\nSondas\nCabo USB'),
+ (5, 'universidade', 'Câmera HD',
+  'Câmera profissional HD para gravações em laboratório.',
+  'PAT-2024-020', 'EM_USO', 2, 3,
+  'https://images.unsplash.com/photo-1516035069371-29a1b244ccaf?w=400&h=300&fit=crop',
+  E'1x Câmera\n1x Tripé\n1x Cartão SD', E'Câmera\nTripé\nCartão SD'),
+ (6, 'empresa', 'Notebook Dell Precision',
+  'Workstation para apresentações e desenvolvimento.',
+  'EMP-0001', 'RESERVADO', 5, 5,
+  'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=300&fit=crop',
+  E'1x Notebook\n1x Carregador\n1x Mouse', E'Notebook\nCarregador\nMouse'),
+ (7, 'empresa', 'Câmera HD',
+  'Câmera para gravação de vídeos institucionais.',
+  'EMP-0002', 'DISPONIVEL', 6, 5,
+  'https://images.unsplash.com/photo-1516035069371-29a1b244ccaf?w=400&h=300&fit=crop',
+  E'1x Câmera\n1x Tripé', E'Câmera\nTripé'),
+ (8, 'escola_tecnica', 'Kit Arduino Uno',
+  'Kit Arduino Uno para as aulas práticas do curso técnico.',
+  'ET-001', 'DISPONIVEL', 7, 6,
+  'https://images.unsplash.com/photo-1629654297299-c8500471aae0?w=400&h=300&fit=crop',
+  E'1x Placa Arduino Uno R3\n1x Cabo USB\nProtoboard', E'Placa Arduino Uno\nCabo USB\nProtoboard'),
+ (9, 'escola_tecnica', 'Kit Arduino Mega',
+  'Kit Arduino Mega para projetos de conclusão de curso.',
+  'ET-002', 'EM_USO', 7, 6,
+  'https://images.unsplash.com/photo-1553406830-ef2513450d76?w=400&h=300&fit=crop',
+  E'1x Placa Arduino Mega\n1x Cabo USB', E'Placa Arduino Mega\nCabo USB'),
+ (10, 'escola_tecnica', 'Multímetro Digital',
+  'Multímetro digital com pontas de prova.',
+  'ET-010', 'DISPONIVEL', 8, 6,
+  'https://images.unsplash.com/photo-1597424216809-3ba9864aeb18?w=400&h=300&fit=crop',
+  E'1x Multímetro\n2x Pontas de prova', E'Multímetro\nPontas de prova')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------- Reservas de exemplo (datas relativas a hoje) ----------
+INSERT INTO reserva (id, tenant_id, usuario_id, equipamento_id, data_inicio, data_fim, status, centro_custo_id, justificativa, data_retirada) VALUES
+ -- Mariana está com a Câmera HD e devolve amanhã (serve para testar o lembrete)
+ (1, 'universidade', 5, 5, CURRENT_DATE - 2, CURRENT_DATE + 1, 'EM_USO', NULL, NULL, CURRENT_TIMESTAMP - INTERVAL '2 days'),
+ -- Bruno (Empresa) pediu o notebook: aguarda aprovação da gestora Patrícia
+ (2, 'empresa', 8, 6, CURRENT_DATE + 3, CURRENT_DATE + 5, 'AGUARDANDO_APROVACAO', 1, 'Uso em apresentação para cliente externo.', NULL),
+ -- Igor (Escola Técnica) está 3 dias atrasado: ao devolver, gera multa
+ (3, 'escola_tecnica', 12, 9, CURRENT_DATE - 6, CURRENT_DATE - 3, 'EM_USO', NULL, NULL, CURRENT_TIMESTAMP - INTERVAL '6 days')
+ON CONFLICT (id) DO NOTHING;
+
+-- Ajusta os contadores SERIAL para continuar depois dos IDs inseridos acima
+SELECT setval(pg_get_serial_sequence('usuario', 'id'),      GREATEST((SELECT MAX(id) FROM usuario), 1));
+SELECT setval(pg_get_serial_sequence('categoria', 'id'),    GREATEST((SELECT MAX(id) FROM categoria), 1));
+SELECT setval(pg_get_serial_sequence('local', 'id'),        GREATEST((SELECT MAX(id) FROM local), 1));
+SELECT setval(pg_get_serial_sequence('centro_custo', 'id'), GREATEST((SELECT MAX(id) FROM centro_custo), 1));
+SELECT setval(pg_get_serial_sequence('equipamento', 'id'),  GREATEST((SELECT MAX(id) FROM equipamento), 1));
+SELECT setval(pg_get_serial_sequence('reserva', 'id'),      GREATEST((SELECT MAX(id) FROM reserva), 1));

@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "LabShare Backend",
+      "request": "launch",
+      "mainClass": "br.pucpr.labshare.LabShareApplication",
+      "projectName": "labshare-backend",
+      "cwd": "${workspaceFolder}/backend"
+    }
+  ]
+}
