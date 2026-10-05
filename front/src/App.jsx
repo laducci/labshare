@@ -1,3 +1,16 @@
+/*
+ * ============================================================
+ *  App.jsx  |  Camada: Front-end (mapa de rotas / telas)
+ *  Responsável na apresentação: Todos  |  Atividade: Q2 (telas + variabilidade por recurso), Q3 (CrudPage reutilizado)
+ * ------------------------------------------------------------
+ *  O que faz: define qual tela aparece para cada URL (React Router). Cada rota passa pelo
+ *  ProtectedRoute, que confere se há usuário logado, se o PERFIL pode abrir a tela (RNF05) e,
+ *  em algumas, se o CLIENTE tem o recurso ligado (variabilidade: lateFee, costCenter, approvalRequired).
+ *  Os cadastros simples (usuários, categorias, locais, reservas, ocorrências...) usam a MESMA
+ *  tela genérica CrudPage, só trocando a configuração (crudConfigs.jsx).
+ *  Quem chama: main.jsx.   Chama: ProtectedRoute, CrudPage, todas as páginas em pages/.
+ * ============================================================
+ */
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -34,18 +47,29 @@ import LateFeePanel from './pages/LateFeePanel';
 import TenantSettings from './pages/TenantSettings';
 import Dashboard from './pages/Dashboard';
 
+// Perfis que podem abrir as telas de manutenção.
 const EQUIPE_MANUTENCAO = ['manutencao', 'admin'];
 
 /** Atalho: rota protegida por perfil (e opcionalmente por recurso do cliente). */
+// roles = perfis permitidos (null = qualquer usuário logado); feature = recurso do cliente exigido.
+// Ex.: P(['admin'], <LateFeePanel />, 'lateFee') só abre para admin de cliente com multa ligada.
 const P = (roles, element, feature) => <ProtectedRoute roles={roles} feature={feature}>{element}</ProtectedRoute>;
 
 /** Garante que o CrudPage seja recriado ao trocar de cadastro no menu. */
+// REUSO (Q3): um único componente CrudPage serve vários cadastros; CRUDS[nome] traz a configuração
+// (endpoint, colunas, campos). A prop key={nome} faz o React descartar o estado do cadastro anterior
+// (formulário, lista) ao ir, por exemplo, de Categorias para Locais.
 function Crud({ nome }) {
   return <CrudPage key={nome} config={CRUDS[nome]} />;
 }
 
+// Componente raiz das telas. useApp() traz o usuário logado do AppContext.
+// <Routes> escolhe a primeira <Route> cujo "path" bate com a URL; ":id" vira parâmetro lido com useParams().
+// Organização das rotas: pública (landing/login), aluno/professor, técnico, manutenção, equipamentos,
+// administração e gestor. A rota "*" no final manda qualquer URL desconhecida para a landing page.
 function App() {
   const { user } = useApp();
+  // Se já está logado e abre /login, vai direto para a tela inicial do seu perfil; senão mostra o Login.
   const login = user ? <Navigate to={rotaInicial(user.perfil)} replace /> : <Login />;
 
   return (

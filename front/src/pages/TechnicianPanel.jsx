@@ -1,3 +1,15 @@
+/*
+ * ============================================================
+ *  TechnicianPanel.jsx  |  Camada: Front-end React (tela / página)
+ *  Responsável na apresentação: Laura  |  Atividade: Q2 (fluxo de retirada/devolução), Q3 (um componente para 3 rotas)
+ * ------------------------------------------------------------
+ *  O que faz: painel do técnico: lista reservas "Agendada" (a retirar) e "Em uso" (a devolver),
+ *  mostra indicadores (atrasadas, ocorrências abertas) e permite enviar lembretes (RN12).
+ *  Quem chama: App.jsx, rotas /tecnico/painel, /tecnico/retiradas e /tecnico/devolucoes (prop filtro).
+ *  Chama: GET /api/reservas?status=AGENDADA,EM_USO, GET /api/ocorrencias/abertas, POST /api/notificacoes/lembretes;
+ *         navega para /tecnico/retirada/:id (RegisterPickup) e /tecnico/devolucao/:id (RegisterReturn).
+ * ============================================================
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, BellRing, Clock } from 'lucide-react';
@@ -16,11 +28,20 @@ import { formatDateBR, isoDate } from '../utils/format';
 export default function TechnicianPanel({ filtro = 'todos' }) {
   const { user } = useApp();
   const navigate = useNavigate();
-  // GET /api/reservas?status=AGENDADA,EM_USO
+  // GET /api/reservas?status=AGENDADA,EM_USO -> ReservaController.porStatus (@GetMapping(params = "status"))
+  //   -> ReservaService.listarPorStatus -> ReservaDao.listarPorStatus
+  //   -> SELECT t.*, u.nome AS usuario_nome, e.nome AS equipamento_nome, ... FROM reserva t ...
+  //      WHERE t.tenant_id = ? AND t.ativo = TRUE AND (t.status IN (?, ?)) ORDER BY t.data_inicio DESC
   const { dados, carregando, erro, recarregar } = useApi('/reservas?status=AGENDADA,EM_USO');
+  // Indicador "Ocorrências abertas": GET /api/ocorrencias/abertas -> OcorrenciaController.abertas
+  //   -> OcorrenciaService.listarAbertas -> SELECT t.*, e.nome AS equipamento_nome, ... FROM ocorrencia t
+  //      JOIN equipamento e ... WHERE t.tenant_id = ? AND t.ativo = TRUE AND (t.status = 'ABERTA')
   const ocorrencias = useApi('/ocorrencias/abertas');
+  // Estado: mensagem mostrada depois de enviar os lembretes.
   const [mensagem, setMensagem] = useState(null);
 
+  // Separação feita no front: agendadas (a retirar), emUso (a devolver) e atrasadas (fim antes de hoje).
+  // "lista" é o que a tabela mostra, de acordo com a rota (prop filtro).
   const reservas = dados || [];
   const hoje = isoDate(0);
   const agendadas = reservas.filter((r) => r.status === 'Agendada');
@@ -28,7 +49,13 @@ export default function TechnicianPanel({ filtro = 'todos' }) {
   const atrasadas = emUso.filter((r) => r.dataFim < hoje);
   const lista = filtro === 'retiradas' ? agendadas : filtro === 'devolucoes' ? emUso : reservas;
 
-  /** POST /api/notificacoes/lembretes -> Template Method LembreteDevolucao */
+  /**
+   * Botão "Enviar lembretes de devolução" (RN12):
+   *   POST /api/notificacoes/lembretes -> NotificacaoController.enviarLembretes
+   *   -> NotificacaoService.enviarLembretesDeDevolucao -> SELECT das reservas "Em uso" do cliente
+   *   -> LembreteDevolucao.enviar (Template Method de NotificacaoTemplate) para as que vencem até amanhã
+   *   -> INSERT INTO notificacao (tenant_id, ativo, usuario_id, titulo, mensagem, lida, data_criacao) VALUES (?, ...)
+   */
   const enviarLembretes = async () => {
     try {
       const r = await api.post('/notificacoes/lembretes');
@@ -38,8 +65,11 @@ export default function TechnicianPanel({ filtro = 'todos' }) {
     }
   };
 
+  // Título da página conforme a rota usada.
   const titulos = { todos: 'Painel do Técnico', retiradas: 'Retiradas pendentes', devolucoes: 'Devoluções previstas' };
 
+  // JSX: cabeçalho com botão de lembretes, cartões de indicadores (só no painel completo) e a tabela.
+  // Na tabela o botão muda: "Agendada" -> Registrar retirada; "Em uso" -> Registrar devolução.
   return (
     <Layout fullWidth>
       <div className="page-header-row">

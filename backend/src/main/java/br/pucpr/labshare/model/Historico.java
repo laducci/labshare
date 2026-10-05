@@ -1,12 +1,25 @@
+/*
+ * ============================================================
+ *  Historico.java  |  Camada: Model (entidade / tabela historico)
+ *  Responsável na apresentação: Todos  |  Atividade: Q2 (rastreabilidade), RN11 / RNF10
+ * ------------------------------------------------------------
+ *  O que faz: Linha de auditoria: registra quem fez qual ação, em qual registro e quando
+ *  (ex.: "Reserva 12 - APROVADA por Ana em 05/10"). Nunca é apagada: é o
+ *  histórico exigido por RN11 (manter histórico) e RNF10 (rastreabilidade).
+ *  Quem chama: HistoricoService (cria), HistoricoDao (grava/lista).   Chama: nada.
+ * ============================================================
+ */
 package br.pucpr.labshare.model;
 
 import java.time.LocalDateTime;
 
 /** Registro de rastreabilidade (RNF10 / RN11): quem fez o quê, em qual registro e quando. */
+// Não estende EntidadeBase: histórico não tem exclusão lógica nem CRUD (só inserção e consulta).
 public class Historico {
 
     private Long id;
     private String tenantId;
+    // Nome da entidade afetada (ex.: "Reserva") e o id do registro (entidadeId).
     private String entidade;
     private Long entidadeId;
     private String acao;
@@ -15,8 +28,10 @@ public class Historico {
     private String usuarioNome;  // JOIN (só leitura)
     private LocalDateTime dataHora;
 
+    // Construtor vazio: usado pelo DAO (RowMapper) ao ler do banco e pelo Jackson.
     public Historico() {}
 
+    // Construtor completo: usado pelo HistoricoService para registrar uma ação. dataHora é preenchida pelo banco.
     public Historico(String tenantId, String entidade, Long entidadeId, String acao, String descricao, Long usuarioId) {
         this.tenantId = tenantId;
         this.entidade = entidade;
@@ -26,6 +41,7 @@ public class Historico {
         this.usuarioId = usuarioId;
     }
 
+    // Getters e setters: usados pelo Jackson para converter objeto <-> JSON (e pelos DAOs/RowMapper ao ler do banco).
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getTenantId() { return tenantId; }

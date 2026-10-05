@@ -1,3 +1,14 @@
+/*
+ * ============================================================
+ *  ManagerPanel.jsx  |  Camada: Front-end React (tela / página)
+ *  Responsável na apresentação: Todos  |  Atividade: Q2 (variabilidade), Q1 (Strategy RegraAprovacao)
+ * ------------------------------------------------------------
+ *  O que faz: painel do gestor (só no cliente Empresa Corporativa): lista as reservas
+ *  "Aguardando aprovação" para o gestor decidir.
+ *  Quem chama: App.jsx, rotas /gestor/painel e /gestor/aprovacoes (protegidas pelo recurso "approvalRequired").
+ *  Chama: GET /api/reservas?status=AGUARDANDO_APROVACAO; navega para /gestor/aprovacoes/:id (ApprovalDetail).
+ * ============================================================
+ */
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
@@ -6,13 +17,21 @@ import { useApp } from '../context/AppContext';
 import { useApi } from '../hooks/useApi';
 import { formatDateBR } from '../utils/format';
 
-/** VARIABILIDADE: tela e perfil que só existem para clientes com "approvalRequired". */
+/**
+ * VARIABILIDADE: tela e perfil que só existem para clientes com "approvalRequired".
+ * Nesses clientes a estratégia AprovacaoPeloGestor faz toda reserva nascer "Aguardando aprovação".
+ */
 export default function ManagerPanel() {
+  // useApp: usuário e cliente logados (AppContext).
   const { user, tenant } = useApp();
   const navigate = useNavigate();
+  // GET /api/reservas?status=AGUARDANDO_APROVACAO -> ReservaController.porStatus -> ReservaService.listarPorStatus
+  //   -> ReservaDao.listarPorStatus -> SELECT t.*, u.nome AS usuario_nome, e.nome AS equipamento_nome, ...
+  //      FROM reserva t ... WHERE t.tenant_id = ? AND t.ativo = TRUE AND (t.status IN (?)) ORDER BY t.data_inicio DESC
   const { dados, carregando, erro } = useApi('/reservas?status=AGUARDANDO_APROVACAO');
   const pendentes = dados || [];
 
+  // JSX: explicação do recurso e um card clicável por solicitação pendente.
   return (
     <Layout>
       <h1 className="page-title">Painel do Gestor</h1>

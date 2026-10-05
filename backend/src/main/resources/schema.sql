@@ -1,13 +1,30 @@
 -- ============================================================
+--  schema.sql  |  Camada: Banco de dados (estrutura / DDL)
+--  Responsável na apresentação: Todos  |  Atividade: Q2 (tabelas + variabilidade tenant_recurso)
+-- ------------------------------------------------------------
+--  O que faz: cria todas as tabelas do LabShare no PostgreSQL (Neon).
+--  Quem chama: o Spring Boot, ao iniciar (spring.sql.init.mode=always em application.properties).
+--  Chama: nada. Depois dele o Spring roda o data.sql (dados de demonstração).
+-- ============================================================
 --  LabShare - estrutura do banco (PostgreSQL / Neon)
 --  Roda automaticamente quando o backend inicia.
 --  "IF NOT EXISTS" garante que pode rodar várias vezes sem erro.
 --
 --  Toda tabela de negócio tem tenant_id: é o que permite o mesmo
 --  banco atender vários clientes (Linha de Produto de Software).
+--
+--  Convenções usadas em todas as tabelas:
+--  - id SERIAL PRIMARY KEY: número gerado automaticamente pelo banco (1, 2, 3...).
+--  - tenant_id REFERENCES tenant(id): chave estrangeira, o registro pertence a um cliente.
+--    Todo SELECT dos DAOs filtra "tenant_id = ?" para um cliente nunca ver dado de outro.
+--  - ativo BOOLEAN DEFAULT TRUE: exclusão lógica. "Excluir" na tela faz
+--    UPDATE ... SET ativo = FALSE, o registro continua no banco (histórico, RN11 / RNF10).
+--  - status VARCHAR: guarda o nome do enum Java (ex.: 'DISPONIVEL', 'EM_USO').
 -- ============================================================
 
 -- Clientes (tenants) que usam o LabShare
+-- O id é texto legível ('universidade', 'empresa', 'escola_tecnica') e é o valor
+-- enviado pelo frontend no cabeçalho X-Tenant-Id.
 CREATE TABLE IF NOT EXISTS tenant (
     id        VARCHAR(40)  PRIMARY KEY,
     nome      VARCHAR(120) NOT NULL,
@@ -15,6 +32,11 @@ CREATE TABLE IF NOT EXISTS tenant (
 );
 
 -- VARIABILIDADE: quais recursos cada cliente tem ligados (feature flags)
+-- Recursos: approvalRequired (reserva precisa de aprovação do gestor),
+-- costCenter (reserva exige centro de custo), lateFee (atraso gera multa).
+-- Chave primária composta (tenant_id, recurso): cada recurso aparece uma vez por cliente,
+-- o que permite o "ON CONFLICT (tenant_id, recurso) DO UPDATE" do TenantDao.salvarRecurso.
+-- Lida pelo TenantDao.carregarRecursos e guardada no Singleton FeatureFlagCache.
 CREATE TABLE IF NOT EXISTS tenant_recurso (
     tenant_id   VARCHAR(40) NOT NULL REFERENCES tenant(id),
     recurso     VARCHAR(40) NOT NULL,
@@ -22,6 +44,10 @@ CREATE TABLE IF NOT EXISTS tenant_recurso (
     PRIMARY KEY (tenant_id, recurso)
 );
 
+-- Usuários do sistema (CRUD de Usuários e login).
+-- email UNIQUE no sistema inteiro: o login busca só pelo e-mail, sem saber o cliente.
+-- senha_hash: guarda o hash BCrypt, nunca a senha em texto (RNF04).
+-- perfil: aluno, professor, tecnico, manutencao, gestor ou admin (autorização por perfil, RNF05).
 CREATE TABLE IF NOT EXISTS usuario (
     id          SERIAL PRIMARY KEY,
     tenant_id   VARCHAR(40)  NOT NULL REFERENCES tenant(id),
@@ -32,6 +58,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     ativo       BOOLEAN      NOT NULL DEFAULT TRUE
 );
 
+-- Categorias de equipamento (CRUD de Categorias). icone = nome do ícone mostrado no frontend.
 CREATE TABLE IF NOT EXISTS categoria (
     id         SERIAL PRIMARY KEY,
     tenant_id  VARCHAR(40) NOT NULL REFERENCES tenant(id),
@@ -40,6 +67,7 @@ CREATE TABLE IF NOT EXISTS categoria (
     ativo      BOOLEAN     NOT NULL DEFAULT TRUE
 );
 
+-- Locais físicos onde ficam os equipamentos (CRUD de Locais): laboratórios, salas.
 CREATE TABLE IF NOT EXISTS local (
     id         SERIAL PRIMARY KEY,
     tenant_id  VARCHAR(40)  NOT NULL REFERENCES tenant(id),
@@ -49,6 +77,10 @@ CREATE TABLE IF NOT EXISTS local (
 );
 
 -- "Recurso / Ativo" genérico: pode ser Arduino, câmera, notebook, sala...
+-- status: DISPONIVEL, RESERVADO, EM_USO, EM_INSPECAO, EM_MANUTENCAO ou INDISPONIVEL.
+-- Equipamento EM_MANUTENCAO ou INDISPONIVEL não pode ser reservado (RN01 / RN02).
+-- categoria_id e local_id podem ser NULL, por isso os DAOs usam LEFT JOIN.
+-- itens_checklist: itens conferidos na retirada e na devolução (RN05 / RN07).
 CREATE TABLE IF NOT EXISTS equipamento (
     id               SERIAL PRIMARY KEY,
     tenant_id        VARCHAR(40)  NOT NULL REFERENCES tenant(id),
@@ -73,6 +105,11 @@ CREATE TABLE IF NOT EXISTS centro_custo (
     ativo      BOOLEAN      NOT NULL DEFAULT TRUE
 );
 
+-- Reservas / empréstimos (CRUD de Reservas e fluxo de retirada e devolução).
+-- data_inicio e data_fim NOT NULL: reserva precisa de data inicial e final (RN03).
+-- status: AGUARDANDO_APROVACAO, AGENDADA, EM_USO, FINALIZADA, CANCELADA ou REJEITADA.
+-- centro_custo_id e justificativa: só preenchidos quando o cliente tem costCenter ligado.
+-- data_retirada: gravada ao confirmar a retirada (RN06). data_devolucao: gravada na devolução.
 CREATE TABLE IF NOT EXISTS reserva (
     id               SERIAL PRIMARY KEY,
     tenant_id        VARCHAR(40) NOT NULL REFERENCES tenant(id),
@@ -89,6 +126,10 @@ CREATE TABLE IF NOT EXISTS reserva (
     ativo            BOOLEAN     NOT NULL DEFAULT TRUE
 );
 
+-- Ocorrências: defeito ou dano encontrado na inspeção da devolução (RN08).
+-- Abrir uma ocorrência leva o equipamento para Em manutenção (RN09).
+-- reserva_id pode ser NULL (ocorrência registrada fora de um empréstimo).
+-- status: ABERTA, EM_MANUTENCAO ou ENCERRADA.
 CREATE TABLE IF NOT EXISTS ocorrencia (
     id              SERIAL PRIMARY KEY,
     tenant_id       VARCHAR(40) NOT NULL REFERENCES tenant(id),
@@ -101,6 +142,9 @@ CREATE TABLE IF NOT EXISTS ocorrencia (
     ativo           BOOLEAN     NOT NULL DEFAULT TRUE
 );
 
+-- Manutenções (CRUD de Manutenções). Geralmente nasce de uma ocorrência (ocorrencia_id).
+-- Só quando a manutenção é concluída o equipamento volta a Disponível (RN10).
+-- responsavel_id: usuário de manutenção que fez o reparo.
 CREATE TABLE IF NOT EXISTS manutencao (
     id                  SERIAL PRIMARY KEY,
     tenant_id           VARCHAR(40) NOT NULL REFERENCES tenant(id),
@@ -116,6 +160,8 @@ CREATE TABLE IF NOT EXISTS manutencao (
 );
 
 -- Usado apenas por clientes com o recurso "lateFee" (Escola Técnica)
+-- Criada na devolução atrasada. valor NUMERIC(10,2): dinheiro com 2 casas decimais exatas
+-- (calculado pela Strategy CalculoMulta, ex.: dias_atraso x valor diário).
 CREATE TABLE IF NOT EXISTS multa (
     id           SERIAL PRIMARY KEY,
     tenant_id    VARCHAR(40)   NOT NULL REFERENCES tenant(id),
@@ -126,6 +172,8 @@ CREATE TABLE IF NOT EXISTS multa (
     ativo        BOOLEAN       NOT NULL DEFAULT TRUE
 );
 
+-- Notificações mostradas na tela de avisos (ex.: lembrete perto da devolução, RN12).
+-- lida: muda para TRUE quando o usuário abre o aviso.
 CREATE TABLE IF NOT EXISTS notificacao (
     id            SERIAL PRIMARY KEY,
     tenant_id     VARCHAR(40)  NOT NULL REFERENCES tenant(id),
@@ -138,6 +186,8 @@ CREATE TABLE IF NOT EXISTS notificacao (
 );
 
 -- Rastreabilidade (RNF10): tudo que acontece fica registrado aqui
+-- Manter histórico (RN11). Não tem coluna "ativo": histórico nunca é editado nem excluído.
+-- entidade + entidade_id dizem qual registro foi afetado (ex.: 'reserva', 5).
 CREATE TABLE IF NOT EXISTS historico (
     id           SERIAL PRIMARY KEY,
     tenant_id    VARCHAR(40) NOT NULL REFERENCES tenant(id),

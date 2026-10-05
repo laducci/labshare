@@ -1,8 +1,21 @@
+/*
+ * ============================================================
+ *  EquipmentCard.jsx  |  Camada: Front-end (componente visual reutilizável)
+ *  Responsável na apresentação: Laura  |  Atividade: Q2 (CRUD de Equipamentos), Q3 (reuso)
+ * ------------------------------------------------------------
+ *  O que faz: cartão de um equipamento (foto, nome, status, categoria, local e botão "Ver detalhes").
+ *  O mesmo cartão é usado em várias telas, recebendo o equipamento por props.
+ *  Quem chama: Home, SearchResults, EquipmentList (catálogo).
+ *  Chama: StatusBadge; navigate -> /equipamento/:id (EquipmentDetails).
+ * ============================================================
+ */
 import { MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 
 /** Ativo reutilizável: cartão de equipamento (Home, Busca, Catálogo). */
+// Props: equipamento = objeto vindo de GET /api/equipamentos (com categoriaNome e localNome já
+// preenchidos pelo JOIN no EquipamentoDao). O botão usa navigate para abrir a tela de detalhes.
 export default function EquipmentCard({ equipamento }) {
   const navigate = useNavigate();
   return (

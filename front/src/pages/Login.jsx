@@ -1,3 +1,15 @@
+/*
+ * ============================================================
+ *  Login.jsx  |  Camada: Front-end React (tela / página)
+ *  Responsável na apresentação: Camilla  |  Atividade: Q2 (login + variabilidade por cliente)
+ * ------------------------------------------------------------
+ *  O que faz: tela de login. Envia e-mail e senha para o backend, que confere o hash BCrypt
+ *  (RNF04) e devolve o usuário e o cliente (tenant) com seus recursos habilitados.
+ *  Depois manda cada perfil para sua tela inicial (rotaInicial).
+ *  Quem chama: App.jsx, rota /login (e /prototipo redireciona para cá).
+ *  Chama: AppContext.login -> POST /api/auth/login; navigate(rotaInicial(perfil)).
+ * ============================================================
+ */
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { CalendarDays, Eye, EyeOff, PackageCheck, Wrench } from 'lucide-react';
@@ -17,16 +29,28 @@ const USUARIOS_DEMO = [
   { email: 'paulo@escolatecnica.com', rotulo: 'Técnico (Paulo – Escola Técnica)' },
 ];
 
+/** Tela de login. */
 export default function Login() {
+  // useState: campos do formulário, mostrar/ocultar senha, erro e "entrando" (desabilita botões).
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState(null);
   const [entrando, setEntrando] = useState(false);
+  // login vem do AppContext: faz a chamada à API e guarda a sessão (usuário + tenant) para as outras telas.
   const { login } = useApp();
   const navigate = useNavigate();
 
-  /** POST /api/auth/login -> o backend confere o hash BCrypt da senha */
+  /**
+   * Faz o login (usado pelo formulário e pelos botões de usuário de demonstração):
+   *   AppContext.login -> POST /api/auth/login { email, senha } -> AuthController.login -> AuthService.login
+   *   -> UsuarioDao.buscarPorEmail -> SELECT t.* FROM usuario t WHERE LOWER(t.email) = LOWER(?) AND t.ativo = TRUE
+   *   -> UsuarioService.senhaConfere: BCrypt compara a senha digitada com senha_hash (RNF04, nunca senha pura)
+   *   -> TenantService.buscar -> SELECT id, nome, segmento FROM tenant WHERE id = ?
+   *      + SELECT recurso, habilitado FROM tenant_recurso WHERE tenant_id = ? (se não estiver no FeatureFlagCache)
+   * Login errado -> RegraNegocioException -> HTTP 400 { erro } -> a mensagem aparece na tela.
+   * Login certo -> navigate para a tela inicial do perfil (RNF05).
+   */
   const entrar = async (emailLogin, senhaLogin) => {
     setErro(null);
     setEntrando(true);
@@ -40,11 +64,14 @@ export default function Login() {
     }
   };
 
+  /** Submit do formulário: impede o recarregamento da página e chama entrar(). */
   const handleSubmit = (e) => {
     e.preventDefault();
     entrar(email, senha);
   };
 
+  // JSX: painel visual à esquerda e formulário à direita; os botões de demonstração preenchem
+  // e-mail/senha e já chamam entrar() com um usuário de cada perfil/cliente.
   return (
     <div className="login-page">
       <aside className="login-visual">

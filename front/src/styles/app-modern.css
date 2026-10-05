@@ -1512,11 +1512,25 @@ a:focus-visible,
 }
 
 /* ---- adicionados na integração com o backend ---- */
+/*
+ * ============================================================
+ *  app-modern.css (bloco final)  |  Camada: Front-end (estilos)
+ *  Responsável na apresentação: Todos  |  Atividade: Q2 (telas ligadas ao banco)
+ * ------------------------------------------------------------
+ *  O que faz: classes criadas quando o protótipo passou a usar a API real: mensagens de
+ *  erro/sucesso, formulário do CrudPage, dica abaixo dos campos, contador do sino de
+ *  notificações e listas das telas Notificações e Perfil.
+ *  Quem usa: States.jsx (alert), CrudPage.jsx (crud-form, form-hint), Layout.jsx (header-badge),
+ *  Notifications.jsx (notification-item), Profile.jsx (feature-list).
+ * ============================================================
+ */
+/* Caixa de erro do <ErrorState> (mensagem {erro} vinda do TratadorDeErros do backend). */
 .alert-error {
   color: #a3312a;
   background: #fdecea;
   border: 1px solid #f5c6c2;
 }
+/* Espaço entre a mensagem (erro/sucesso) e o que vem logo depois dela. */
 .alert + .card,
 .alert + .table-wrap,
 .alert + form {
@@ -1525,18 +1539,22 @@ a:focus-visible,
 .alert {
   margin-bottom: 16px;
 }
+/* Formulário de novo/editar da tela genérica CrudPage. */
 .crud-form {
   margin-bottom: 24px;
 }
 .crud-form .form-actions {
   margin-top: 8px;
 }
+/* Texto de ajuda pequeno abaixo de um campo (ex.: "Mínimo 6 caracteres" da senha). */
 .form-hint {
   display: block;
   margin-top: 4px;
   font-size: 12px;
   color: var(--color-text-muted);
 }
+/* Bolinha vermelha com o número de notificações não lidas no sino do cabeçalho (Layout.jsx).
+   position: absolute posiciona em relação ao botão, que por isso recebe position: relative logo abaixo. */
 .header-badge {
   position: absolute;
   top: 2px;
@@ -1554,6 +1572,7 @@ a:focus-visible,
 .app-header__icon-btn {
   position: relative;
 }
+/* Item da lista de notificações; as não lidas ganham uma borda colorida à esquerda. */
 .notification-item {
   display: flex;
   justify-content: space-between;
@@ -1563,6 +1582,7 @@ a:focus-visible,
 .notification-item--unread {
   border-left: 3px solid var(--color-primary);
 }
+/* Lista de etiquetas com os recursos ligados/desligados do cliente (tela Perfil); quebra linha quando não cabe. */
 .feature-list {
   display: flex;
   flex-wrap: wrap;

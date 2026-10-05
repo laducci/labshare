@@ -1,3 +1,14 @@
+/*
+ * ============================================================
+ *  RegraCentroCusto.java  |  Camada: Variabilidade (interface Strategy)
+ *  Responsável na apresentação: Todos  |  Atividade: Q1 (Strategy RegraCentroCusto), Q2 (variabilidade)
+ * ------------------------------------------------------------
+ *  O que faz: contrato da regra de centro de custo da reserva. A estratégia
+ *  é escolhida pelo SeletorDeRegras conforme o recurso "costCenter" do cliente.
+ *  Quem chama: ReservaService.antesDeSalvar (antes do INSERT/UPDATE da reserva).
+ *  Implementações: CentroCustoNaoUtilizado, CentroCustoObrigatorio.
+ * ============================================================
+ */
 package br.pucpr.labshare.variabilidade;
 
 import br.pucpr.labshare.model.Reserva;

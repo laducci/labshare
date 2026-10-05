@@ -1,3 +1,14 @@
+/*
+ * ============================================================
+ *  ApprovalDetail.jsx  |  Camada: Front-end React (tela / página)
+ *  Responsável na apresentação: Todos  |  Atividade: Q2 (variabilidade), Q1 (Strategy RegraAprovacao)
+ * ------------------------------------------------------------
+ *  O que faz: o gestor analisa uma solicitação "Aguardando aprovação" e aprova ou rejeita.
+ *  Só existe para clientes com o recurso approvalRequired (estratégia AprovacaoPeloGestor).
+ *  Quem chama: App.jsx, rota /gestor/aprovacoes/:id (clique em um card do ManagerPanel).
+ *  Chama: GET /api/reservas/{id}, POST /api/reservas/{id}/aprovar, POST /api/reservas/{id}/rejeitar.
+ * ============================================================
+ */
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -7,17 +18,33 @@ import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { formatDateBR } from '../utils/format';
 
+/** Tela de decisão do gestor. O id da reserva vem da URL. */
 export default function ApprovalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // GET /api/reservas/{id} -> ReservaController.buscar (herdado de CrudController) -> ReservaService.buscar
+  //   -> SELECT t.*, u.nome AS usuario_nome, e.nome AS equipamento_nome, cc.nome AS centro_custo_nome, ...
+  //      FROM reserva t ... LEFT JOIN centro_custo cc ... WHERE t.id = ? AND t.tenant_id = ?
   const { dados: r, setDados, carregando, erro } = useApi(`/reservas/${id}`);
+  // Estado: motivo digitado (usado só na rejeição) e erro da ação.
   const [motivo, setMotivo] = useState('');
   const [erroAcao, setErroAcao] = useState(null);
 
   if (carregando) return <Layout><LoadingState /></Layout>;
   if (erro) return <Layout><ErrorState mensagem={erro} /></Layout>;
 
-  /** POST /api/reservas/{id}/aprovar  ou  /rejeitar { motivo } */
+  /**
+   * Botões "Aprovar retirada" / "Rejeitar" (acao = 'aprovar' ou 'rejeitar'):
+   *   POST /api/reservas/{id}/aprovar -> ReservaController.aprovar -> ReservaService.aprovar
+   *     -> exige o recurso approvalRequired (senão 403); status "Aguardando aprovação" -> "Agendada"
+   *     -> UPDATE reserva SET ..., status = 'AGENDADA', ... WHERE id = ? AND tenant_id = ?
+   *     -> INSERT INTO historico (... 'APROVACAO' ...)
+   *   POST /api/reservas/{id}/rejeitar { motivo } -> ReservaService.rejeitar
+   *     -> status "Rejeitada", observacoes = motivo -> UPDATE reserva SET ...
+   *     -> libera o equipamento se ninguém mais reservou (UPDATE equipamento SET status = ?)
+   *     -> INSERT INTO historico (... 'REJEICAO' ...)
+   * O backend devolve a reserva atualizada e setDados troca o que está na tela.
+   */
   const decidir = async (acao) => {
     setErroAcao(null);
     try {
@@ -27,8 +54,10 @@ export default function ApprovalDetail() {
     }
   };
 
+  // Só mostra os botões enquanto a solicitação está pendente.
   const pendente = r.status === 'Aguardando aprovação';
 
+  // JSX: resumo da solicitação + justificativa; botões de decisão ou o resultado da decisão.
   return (
     <Layout>
       <h1 className="page-title">Aprovação de retirada</h1>

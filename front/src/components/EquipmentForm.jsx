@@ -1,3 +1,15 @@
+/*
+ * ============================================================
+ *  EquipmentForm.jsx  |  Camada: Front-end (formulário reutilizável)
+ *  Responsável na apresentação: Laura  |  Atividade: Q2 (CRUD de Equipamentos), Q3 (compactação: 1 form para criar e editar)
+ * ------------------------------------------------------------
+ *  O que faz: formulário de equipamento usado tanto para CADASTRAR quanto para EDITAR.
+ *  Se receber equipamentoId, carrega o equipamento e salva com PUT; se não, começa vazio e salva com POST.
+ *  Carrega também as categorias e os locais para os selects.
+ *  Quem chama: pages/CreateEquipment.jsx (sem id) e pages/EditEquipment.jsx (com id da URL).
+ *  Chama: useApi (GET /equipamentos/{id}, /categorias, /locais), api.post/put (/equipamentos), navigate.
+ * ============================================================
+ */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout';
@@ -6,10 +18,13 @@ import { ErrorState, LoadingState } from './States';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 
+// Valores iniciais do formulário de cadastro. Itens são texto (um por linha) enquanto estão no formulário.
 const VAZIO = {
   nome: '', descricao: '', patrimonio: '', categoriaId: '', localId: '', status: 'Disponível',
   imagemUrl: '', itensInclusos: '', itensChecklist: '',
 };
+// Status controlados pelo FLUXO (reserva, retirada, manutenção): o técnico não pode trocá-los à mão,
+// senão quebraria RN06/RN09/RN10. Na edição, se o equipamento estiver num deles, o select fica travado.
 const STATUS_DO_FLUXO = ['Reservado', 'Em uso', 'Em manutenção', 'Em inspeção'];
 
 /**
@@ -18,16 +33,22 @@ const STATUS_DO_FLUXO = ['Reservado', 'Em uso', 'Em manutenção', 'Em inspeçã
  *  - sem equipamentoId -> POST /api/equipamentos       -> INSERT INTO equipamento
  *  - com equipamentoId -> PUT  /api/equipamentos/{id}  -> UPDATE equipamento SET ...
  */
+// Props: equipamentoId (opcional). navigate = troca de tela sem recarregar a página.
 export default function EquipmentForm({ equipamentoId }) {
   const navigate = useNavigate();
+  // Três GETs automáticos (useApi): o equipamento (só na edição; null = não busca), categorias e locais.
   const edicao = Boolean(equipamentoId);
   const existente = useApi(edicao ? `/equipamentos/${equipamentoId}` : null);
   const categorias = useApi('/categorias');   // as opções vêm das tabelas categoria e local
   const locais = useApi('/locais');
+  // Estado da tela: form = valores digitados (null enquanto o equipamento da edição ainda não chegou),
+  // erro = mensagem do backend, salvando = desabilita o botão para evitar duplo clique.
   const [form, setForm] = useState(edicao ? null : VAZIO);
   const [erro, setErro] = useState(null);
   const [salvando, setSalvando] = useState(false);
 
+  // useEffect roda quando o GET do equipamento termina (dependência existente.dados): copia os dados
+  // para o formulário, trocando null por '' (inputs controlados não aceitam null) e listas por texto.
   useEffect(() => {
     const e = existente.dados;
     if (e) setForm({
@@ -42,13 +63,20 @@ export default function EquipmentForm({ equipamentoId }) {
     });
   }, [existente.dados]);
 
+  // Enquanto não há formulário pronto mostra erro ou "Carregando..." (retornos antecipados).
   if (existente.erro) return <Layout><ErrorState mensagem={existente.erro} /></Layout>;
   if (!form) return <Layout><LoadingState /></Layout>;
 
+  // update('nome') devolve a função de onChange daquele campo (evita escrever uma função por input).
+  // linhas() transforma o texto do textarea em array, ignorando linhas vazias.
   const update = (campo) => (e) => setForm((prev) => ({ ...prev, [campo]: e.target.value }));
   const linhas = (texto) => texto.split('\n').map((s) => s.trim()).filter(Boolean);
   const statusTravado = edicao && STATUS_DO_FLUXO.includes(form.status);
 
+  // Botão "Salvar equipamento": monta o JSON (ids viram Number, textos viram listas) e chama
+  // PUT /api/equipamentos/{id} (edição -> UPDATE) ou POST /api/equipamentos (novo -> INSERT).
+  // As validações ficam no EquipamentoService; se falhar, a mensagem aparece no <ErrorState>.
+  // Deu certo -> navigate('/equipamentos') volta para a lista.
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErro(null);
@@ -71,6 +99,9 @@ export default function EquipmentForm({ equipamentoId }) {
     }
   };
 
+  // Formulário em seções: informações básicas, localização/status, descrição, itens/checklist e imagem.
+  // Os <select> de categoria e local são preenchidos com o GET de /categorias e /locais.
+  // "Itens do checklist" alimentam o componente Checklist na retirada/devolução (RN05/RN07).
   return (
     <Layout>
       <div className="page-header">

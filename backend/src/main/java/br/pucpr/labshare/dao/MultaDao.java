@@ -1,3 +1,15 @@
+/*
+ * ============================================================
+ *  MultaDao.java  |  Camada: DAO (acesso ao banco, tabela multa)
+ *  Responsável na apresentação: Todos  |  Atividade: Q2 (variabilidade: recurso lateFee), Q1 (Template Method)
+ * ------------------------------------------------------------
+ *  O que faz: acesso à tabela "multa", usada só por clientes com o recurso "lateFee"
+ *  ligado (ex.: Escola Técnica). A multa é criada na devolução atrasada; o valor é
+ *  calculado pela Strategy CalculoMulta.
+ *  Quem chama: ProcessoDevolucao (gera a multa) e MultaService <- MultaController <- tela LateFeePanel.
+ *  Chama: AbstractDao -> JdbcTemplate -> PostgreSQL.
+ * ============================================================
+ */
 package br.pucpr.labshare.dao;
 
 import br.pucpr.labshare.model.Multa;
@@ -9,28 +21,35 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+// @Repository: componente de acesso a dados; o Spring cria uma instância e injeta onde for pedido.
+// Template Method: só define os passos específicos; o algoritmo do CRUD está no AbstractDao.
 @Repository
 public class MultaDao extends AbstractDao<Multa> {
 
+    // Injeção pelo construtor: recebe o JdbcTemplate do Spring e repassa ao AbstractDao.
     public MultaDao(JdbcTemplate jdbc) {
         super(jdbc);
     }
 
+    // Passo abstrato: nome da tabela.
     @Override
     protected String tabela() {
         return "multa";
     }
 
+    // Passo abstrato: colunas gravadas no INSERT/UPDATE.
     @Override
     protected List<String> colunas() {
         return List.of("reserva_id", "dias_atraso", "valor", "status");
     }
 
+    // Passo abstrato: valores na MESMA ordem das colunas.
     @Override
     protected Object[] valores(Multa m) {
         return new Object[]{m.getReservaId(), m.getDiasAtraso(), m.getValor(), nomeEnum(m.getStatus())};
     }
 
+    // Gancho sobrescrito: a multa aponta para a reserva; pela reserva chegamos ao usuário e ao equipamento.
     @Override
     protected String joins() {
         return "JOIN reserva r ON r.id = t.reserva_id "
@@ -38,16 +57,19 @@ public class MultaDao extends AbstractDao<Multa> {
              + "JOIN equipamento e ON e.id = r.equipamento_id";
     }
 
+    // Gancho: nome de quem atrasou e do equipamento, mostrados no painel de multas.
     @Override
     protected String colunasExtras() {
         return ", u.nome AS usuario_nome, e.nome AS equipamento_nome";
     }
 
+    // Gancho: multas mais novas primeiro.
     @Override
     protected String ordenacao() {
         return "t.id DESC";
     }
 
+    // Passo abstrato: linha do banco -> objeto Multa (valor em BigDecimal por ser dinheiro).
     @Override
     protected Multa criarObjeto(ResultSet rs) throws SQLException {
         Multa m = new Multa();

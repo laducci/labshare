@@ -1,3 +1,15 @@
+/*
+ * ============================================================
+ *  EquipmentMaintenance.jsx  |  Camada: Front-end React (tela / página)
+ *  Responsável na apresentação: Camilla  |  Atividade: Q2 (CRUD de Manutenções - READ, UPDATE, DELETE e conclusão)
+ * ------------------------------------------------------------
+ *  O que faz: registro do reparo de um equipamento: salvar andamento (UPDATE), finalizar
+ *  (equipamento volta a "Disponível", RN10) ou cancelar (DELETE lógico, ocorrência volta à fila).
+ *  Quem chama: App.jsx, rota /manutencao/:id (MaintenancePanel: "Iniciar manutenção" e "Continuar").
+ *  Chama: GET /api/manutencoes/{id}, GET /api/usuarios?perfil=manutencao, PUT /api/manutencoes/{id},
+ *         POST /api/manutencoes/{id}/concluir, DELETE /api/manutencoes/{id}.
+ * ============================================================
+ */
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -7,16 +19,25 @@ import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { formatDateBR } from '../utils/format';
 
-/** Registro do reparo: salvar andamento (UPDATE), finalizar, ou cancelar (DELETE). */
+/**
+ * Registro do reparo: salvar andamento (UPDATE), finalizar, ou cancelar (DELETE).
+ */
 export default function EquipmentMaintenance() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // GET /api/manutencoes/{id} -> ManutencaoController.buscar (herdado) -> ManutencaoService.buscar
+  //   -> SELECT t.*, e.nome AS equipamento_nome, o.descricao AS ocorrencia_descricao, o.prioridade, u.nome AS responsavel_nome
+  //      FROM manutencao t JOIN equipamento e ... LEFT JOIN ocorrencia o ... LEFT JOIN usuario u ... WHERE t.id = ? AND t.tenant_id = ?
   const { dados: m, setDados, carregando, erro } = useApi(`/manutencoes/${id}`);
+  // Opções do campo "Responsável": GET /api/usuarios?perfil=manutencao -> UsuarioController.porPerfil
+  //   -> UsuarioService.listarPorPerfil -> SELECT t.* FROM usuario t WHERE t.tenant_id = ? AND t.ativo = TRUE AND (t.perfil = ?)
   const responsaveis = useApi('/usuarios?perfil=manutencao');
+  // Estado: form = cópia editável da manutenção; mensagem de sucesso; erro da ação.
   const [form, setForm] = useState(null);
   const [mensagem, setMensagem] = useState(null);
   const [erroAcao, setErroAcao] = useState(null);
 
+  // useEffect: quando a manutenção chega (ou é atualizada), preenche o formulário com os dados dela.
   useEffect(() => {
     if (m) setForm({
       descricaoReparo: m.descricaoReparo || '',
@@ -28,9 +49,11 @@ export default function EquipmentMaintenance() {
 
   if (carregando || !form) return <Layout>{erro ? <ErrorState mensagem={erro} /> : <LoadingState />}</Layout>;
 
+  // corpo(): monta o JSON enviado (responsavelId como número). atualizar(campo): handler genérico dos inputs.
   const corpo = () => ({ ...form, responsavelId: form.responsavelId ? Number(form.responsavelId) : null });
   const atualizar = (campo) => (e) => setForm({ ...form, [campo]: e.target.value });
 
+  /** Executa uma ação da API limpando mensagens antes e mostrando o erro do backend se falhar. */
   const executar = async (acao) => {
     setErroAcao(null);
     setMensagem(null);
@@ -41,27 +64,49 @@ export default function EquipmentMaintenance() {
     }
   };
 
-  /** PUT /api/manutencoes/{id} */
+  /**
+   * "Salvar andamento" (UPDATE):
+   *   PUT /api/manutencoes/{id} -> ManutencaoController.atualizar (herdado) -> CrudService.atualizar
+   *   -> ManutencaoService.validar (não pode concluir por aqui) e antesDeSalvar (mantém equipamento, ocorrência e início)
+   *   -> UPDATE manutencao SET equipamento_id = ?, ..., descricao_reparo = ?, pecas_substituidas = ?, status = ?
+   *      WHERE id = ? AND tenant_id = ?
+   *   -> INSERT INTO historico (... 'ATUALIZACAO' ...)
+   */
   const salvar = () => executar(async () => {
     setDados(await api.put(`/manutencoes/${id}`, corpo()));
     setMensagem('Andamento salvo.');
   });
 
-  /** POST /api/manutencoes/{id}/concluir -> equipamento volta a "Disponível" (RN10) */
+  /**
+   * "Finalizar manutenção":
+   *   POST /api/manutencoes/{id}/concluir -> ManutencaoController.concluir -> ManutencaoService.concluir
+   *   -> UPDATE manutencao SET ..., data_fim = ?, status = 'CONCLUIDA' WHERE id = ? AND tenant_id = ?
+   *   -> UPDATE ocorrencia SET ..., status = 'ENCERRADA' ...
+   *   -> RN10: UPDATE equipamento SET status = 'DISPONIVEL' (ou 'RESERVADO' se houver reservas futuras)
+   *   -> INSERT INTO historico (2x) e AvisoManutencaoConcluida (Template Method) -> INSERT INTO notificacao
+   */
   const finalizar = () => executar(async () => {
     await api.post(`/manutencoes/${id}/concluir`, corpo());
     navigate(`/manutencao/${id}/concluida`);
   });
 
-  /** DELETE /api/manutencoes/{id} -> ocorrência volta para a fila */
+  /**
+   * "Cancelar manutenção" (DELETE lógico):
+   *   DELETE /api/manutencoes/{id} -> ManutencaoController.excluir (herdado) -> CrudService.excluir
+   *   -> ManutencaoService.antesDeExcluir: concluída não pode; ocorrência volta para "ABERTA" (UPDATE ocorrencia)
+   *   -> UPDATE manutencao SET ativo = FALSE WHERE id = ? AND tenant_id = ?  (exclusão lógica)
+   *   -> INSERT INTO historico (... 'DESATIVACAO' ...)
+   */
   const cancelar = () => executar(async () => {
     if (!window.confirm('Cancelar esta manutenção? A ocorrência volta para a fila.')) return;
     await api.delete(`/manutencoes/${id}`);
     navigate('/manutencao/painel');
   });
 
+  // Manutenção concluída fica só para leitura (campos desabilitados e sem botões).
   const concluida = m.status === 'Concluída';
 
+  // JSX: à esquerda os dados do equipamento e do problema; à direita o formulário do reparo.
   return (
     <Layout>
       <div className="page-header">

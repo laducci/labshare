@@ -1,11 +1,23 @@
 -- ============================================================
+--  data.sql  |  Camada: Banco de dados (dados de demonstração)
+--  Responsável na apresentação: Todos  |  Atividade: Q2 (dados das telas CRUD + variabilidade por cliente)
+-- ------------------------------------------------------------
+--  O que faz: preenche o banco com 3 clientes, os recursos ligados de cada um,
+--  usuários (personas), categorias, locais, centros de custo, equipamentos e
+--  reservas de exemplo, para as telas já abrirem com dados.
+--  Quem chama: o Spring Boot, logo depois do schema.sql (spring.sql.init.mode=always).
+--  Chama: nada.
+-- ============================================================
 --  LabShare - dados de demonstração
 --  "ON CONFLICT DO NOTHING" = se o registro já existe, não insere de novo.
 --  Assim o backend pode reiniciar sem duplicar nada.
 --  Senha de TODOS os usuários: 123456 (guardada com hash BCrypt)
+--  Os ids são informados à mão aqui para os exemplos se referirem uns aos outros
+--  (ex.: equipamento 5 na categoria 2). No final, setval ajusta os contadores SERIAL.
 -- ============================================================
 
 -- ---------- Clientes (tenants) ----------
+-- Cada cliente é uma variação da Linha de Produto. O id é o valor do cabeçalho X-Tenant-Id.
 INSERT INTO tenant (id, nome, segmento) VALUES
  ('universidade',   'Universidade Padrão', 'Educação'),
  ('empresa',        'Empresa Corporativa', 'Corporativo'),
@@ -13,6 +25,10 @@ INSERT INTO tenant (id, nome, segmento) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ---------- VARIABILIDADE: recursos ligados por cliente ----------
+-- Universidade: nenhum recurso extra (reserva direta, sem centro de custo, sem multa).
+-- Empresa: approvalRequired + costCenter (gestor aprova e reserva exige centro de custo).
+-- Escola Técnica: lateFee (devolução atrasada gera multa).
+-- Esses valores podem ser trocados em tempo de execução na tela "Personalização".
 INSERT INTO tenant_recurso (tenant_id, recurso, habilitado) VALUES
  ('universidade',   'approvalRequired', FALSE),
  ('universidade',   'costCenter',       FALSE),
@@ -26,6 +42,8 @@ INSERT INTO tenant_recurso (tenant_id, recurso, habilitado) VALUES
 ON CONFLICT (tenant_id, recurso) DO NOTHING;
 
 -- ---------- Usuários (personas) ----------
+-- Todos usam o mesmo hash BCrypt da senha 123456 (RNF04: o banco nunca guarda a senha em texto).
+-- O perfil define o que cada um pode fazer nas telas (RNF05).
 INSERT INTO usuario (id, tenant_id, nome, email, senha_hash, perfil) VALUES
  (1,  'universidade',   'Lucas Almeida',    'lucas@email.com',          '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'aluno'),
  (2,  'universidade',   'Carlos Ferreira',  'carlos@email.com',         '$2a$10$xyUjQpUFLWUrp7ntuSvjsuC.TkheLJG2TZbnJvibvX9LiM1OIDcHa', 'tecnico'),
@@ -43,6 +61,7 @@ INSERT INTO usuario (id, tenant_id, nome, email, senha_hash, perfil) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ---------- Categorias ----------
+-- Cada cliente tem as suas próprias categorias (separadas por tenant_id).
 INSERT INTO categoria (id, tenant_id, nome, icone) VALUES
  (1, 'universidade',   'Eletrônica',    'cpu'),
  (2, 'universidade',   'Áudio e Vídeo', 'camera'),
@@ -72,6 +91,10 @@ INSERT INTO centro_custo (id, tenant_id, codigo, nome) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ---------- Equipamentos ----------
+-- O prefixo E antes das aspas (E-string) faz o PostgreSQL entender barra-n como quebra de linha.
+-- Assim itens_inclusos e itens_checklist ficam com um item por linha
+-- (o AbstractDao.deLinhas transforma esse texto em lista no Java).
+-- Há equipamentos em vários status (DISPONIVEL, INDISPONIVEL, EM_USO, RESERVADO) para testar as telas.
 INSERT INTO equipamento (id, tenant_id, nome, descricao, patrimonio, status, categoria_id, local_id, imagem_url, itens_inclusos, itens_checklist) VALUES
  (1, 'universidade', 'Kit Arduino Uno',
   'Kit completo para desenvolvimento com Arduino Uno. Ideal para projetos de eletrônica e prototipagem.',
@@ -128,6 +151,8 @@ INSERT INTO equipamento (id, tenant_id, nome, descricao, patrimonio, status, cat
 ON CONFLICT (id) DO NOTHING;
 
 -- ---------- Reservas de exemplo (datas relativas a hoje) ----------
+-- CURRENT_DATE - 2 / + 1 calcula datas a partir de hoje, então os exemplos
+-- continuam fazendo sentido em qualquer dia em que o backend for iniciado.
 INSERT INTO reserva (id, tenant_id, usuario_id, equipamento_id, data_inicio, data_fim, status, centro_custo_id, justificativa, data_retirada) VALUES
  -- Mariana está com a Câmera HD e devolve amanhã (serve para testar o lembrete)
  (1, 'universidade', 5, 5, CURRENT_DATE - 2, CURRENT_DATE + 1, 'EM_USO', NULL, NULL, CURRENT_TIMESTAMP - INTERVAL '2 days'),
@@ -138,6 +163,9 @@ INSERT INTO reserva (id, tenant_id, usuario_id, equipamento_id, data_inicio, dat
 ON CONFLICT (id) DO NOTHING;
 
 -- Ajusta os contadores SERIAL para continuar depois dos IDs inseridos acima
+-- Sem isso, o próximo INSERT feito pela tela tentaria usar id 1 de novo e daria erro
+-- de chave duplicada. pg_get_serial_sequence acha a sequência da coluna id e
+-- setval coloca nela o maior id existente (GREATEST garante no mínimo 1 com tabela vazia).
 SELECT setval(pg_get_serial_sequence('usuario', 'id'),      GREATEST((SELECT MAX(id) FROM usuario), 1));
 SELECT setval(pg_get_serial_sequence('categoria', 'id'),    GREATEST((SELECT MAX(id) FROM categoria), 1));
 SELECT setval(pg_get_serial_sequence('local', 'id'),        GREATEST((SELECT MAX(id) FROM local), 1));

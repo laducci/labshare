@@ -1,3 +1,15 @@
+/*
+ * ============================================================
+ *  MaintenancePanel.jsx  |  Camada: Front-end React (tela / página)
+ *  Responsável na apresentação: Camilla  |  Atividade: Q2 (CRUD de Manutenções e Ocorrências)
+ * ------------------------------------------------------------
+ *  O que faz: painel da equipe de manutenção: fila de ocorrências abertas (equipamentos com
+ *  defeito, RN08/RN09) e reparos em andamento. "Iniciar manutenção" cria a manutenção (INSERT).
+ *  Quem chama: App.jsx, rota /manutencao/painel (rotaInicial do perfil manutenção).
+ *  Chama: GET /api/ocorrencias/abertas, GET /api/manutencoes, POST /api/manutencoes;
+ *         navega para /manutencao/:id (EquipmentMaintenance).
+ * ============================================================
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -8,19 +20,38 @@ import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { formatDateBR } from '../utils/format';
 
-/** Painel da manutenção (Fernanda): fila de ocorrências + reparos em andamento. */
+/**
+ * Painel da manutenção (Fernanda): fila de ocorrências + reparos em andamento.
+ */
 export default function MaintenancePanel() {
   const { user } = useApp();
   const navigate = useNavigate();
+  // Dois GETs automáticos:
+  //   GET /api/ocorrencias/abertas -> OcorrenciaController.abertas -> OcorrenciaService.listarAbertas
+  //     -> OcorrenciaDao.listarAbertas -> SELECT t.*, e.nome AS equipamento_nome, ... FROM ocorrencia t JOIN equipamento e ...
+  //        WHERE t.tenant_id = ? AND t.ativo = TRUE AND (t.status = 'ABERTA') ORDER BY t.data_abertura DESC
+  //   GET /api/manutencoes -> ManutencaoController.listar (herdado de CrudController) -> ManutencaoService.listar
+  //     -> SELECT t.*, e.nome AS equipamento_nome, ... FROM manutencao t ... WHERE t.tenant_id = ? AND t.ativo = TRUE
   const fila = useApi('/ocorrencias/abertas');      // GET /api/ocorrencias/abertas
   const manutencoes = useApi('/manutencoes');       // GET /api/manutencoes
+  // Estado: filtro de prioridade da fila e mensagem de erro.
   const [prioridade, setPrioridade] = useState('');
   const [erro, setErro] = useState(null);
 
+  // Filtros no front: fila pela prioridade escolhida; andamento = manutenções ainda não concluídas.
   const aguardando = (fila.dados || []).filter((o) => !prioridade || o.prioridade === prioridade);
   const andamento = (manutencoes.dados || []).filter((m) => m.status !== 'Concluída');
 
-  /** "Iniciar manutenção": POST /api/manutencoes { ocorrenciaId } -> INSERT INTO manutencao */
+  /**
+   * Botão "Iniciar manutenção" (CREATE do CRUD de Manutenções):
+   *   POST /api/manutencoes { ocorrenciaId } -> ManutencaoController.criar (herdado) -> CrudService.criar
+   *   -> ManutencaoService.antesDeSalvar: a ocorrência precisa estar "ABERTA"; copia o equipamento, status
+   *      "Em andamento", data_inicio = hoje, responsável = usuário logado
+   *   -> INSERT INTO manutencao (tenant_id, ativo, equipamento_id, ocorrencia_id, responsavel_id, ..., status)
+   *      VALUES (?, ...) RETURNING id
+   *   -> INSERT INTO historico (...) e depoisDeCriar: UPDATE ocorrencia SET ..., status = 'EM_MANUTENCAO' ...
+   * Depois abre a tela da manutenção criada.
+   */
   const iniciar = async (ocorrencia) => {
     setErro(null);
     try {
@@ -31,6 +62,7 @@ export default function MaintenancePanel() {
     }
   };
 
+  // JSX: duas tabelas, "Aguardando manutenção" (fila) e "Em andamento" (botão Continuar).
   return (
     <Layout fullWidth>
       <div className="page-header">

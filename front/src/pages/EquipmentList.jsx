@@ -1,3 +1,16 @@
+/*
+ * ============================================================
+ *  EquipmentList.jsx  |  Camada: Front-end React (tela / página)
+ *  Responsável na apresentação: Laura  |  Atividade: Q2 (CRUD de Equipamentos - READ + DELETE lógico)
+ * ------------------------------------------------------------
+ *  O que faz: lista os equipamentos do cliente. Admin/técnico veem uma tabela com Ver, Editar
+ *  e Desativar; aluno/professor veem cards para reservar. Os filtros (busca, categoria,
+ *  status, local) são feitos no navegador, em cima da lista que veio do banco.
+ *  Quem chama: App.jsx, rota /equipamentos (menu lateral, Home "Ver todos", Dashboard).
+ *  Chama: GET /api/equipamentos, GET /api/categorias, GET /api/locais, DELETE /api/equipamentos/{id};
+ *         navega para /equipamentos/novo, /equipamentos/:id/editar e /equipamento/:id.
+ * ============================================================
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
@@ -9,15 +22,29 @@ import { useApp } from '../context/AppContext';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 
+// Opções do filtro de status (rótulos que o backend devolve no JSON via StatusEquipamento).
 const STATUS = ['Disponível', 'Reservado', 'Em uso', 'Em manutenção', 'Indisponível'];
 
-/** READ do CRUD de equipamentos (Laura) + botão de DELETE lógico. */
+/**
+ * READ do CRUD de equipamentos (Laura) + botão de DELETE lógico (exclusão lógica: ativo = FALSE).
+ */
 export default function EquipmentList() {
   const { user } = useApp();
   const navigate = useNavigate();
+  // useApi faz o GET assim que a tela abre e guarda o resultado em "dados":
+  //   GET /api/equipamentos -> EquipamentoController.listar (herdado de CrudController)
+  //   -> EquipamentoService.listar (CrudService) -> AbstractDao.listar (Template Method)
+  //   -> SELECT t.*, c.nome AS categoria_nome, ..., l.nome AS local_nome FROM equipamento t
+  //      LEFT JOIN categoria c ... LEFT JOIN local l ... WHERE t.tenant_id = ? AND t.ativo = TRUE ORDER BY t.nome
+  // tenant_id = ? garante que cada cliente só vê os próprios equipamentos (multi-cliente);
+  // ativo = TRUE esconde os desativados. "recarregar" refaz o GET depois de desativar.
   const { dados, carregando, erro, recarregar } = useApi('/equipamentos');   // GET /api/equipamentos
+  // Opções dos filtros, vindas das tabelas categoria e local:
+  //   GET /api/categorias -> CategoriaController.listar -> SELECT t.* FROM categoria t WHERE t.tenant_id = ? AND t.ativo = TRUE
+  //   GET /api/locais     -> LocalController.listar     -> SELECT t.* FROM local t WHERE t.tenant_id = ? AND t.ativo = TRUE
   const categorias = useApi('/categorias');
   const locais = useApi('/locais');
+  // useState: valores dos filtros e mensagens de sucesso/erro da ação de desativar.
   const [search, setSearch] = useState('');
   const [categoria, setCategoria] = useState('');
   const [status, setStatus] = useState('');
@@ -25,7 +52,9 @@ export default function EquipmentList() {
   const [mensagem, setMensagem] = useState(null);
   const [erroAcao, setErroAcao] = useState(null);
 
+  // RNF05: só admin e técnico gerenciam o acervo (tabela com ações).
   const canManage = ['admin', 'tecnico'].includes(user?.perfil);
+  // Filtro feito no front (não vai ao banco): aplica busca por nome/patrimônio, categoria, status e local.
   const filtrados = (dados || []).filter((eq) =>
     (!search || eq.nome.toLowerCase().includes(search.toLowerCase()) || (eq.patrimonio || '').toLowerCase().includes(search.toLowerCase()))
     && (!categoria || String(eq.categoriaId) === categoria)
@@ -33,7 +62,15 @@ export default function EquipmentList() {
     && (!local || String(eq.localId) === local)
   );
 
-  /** DELETE /api/equipamentos/{id} -> UPDATE equipamento SET ativo = FALSE */
+  /**
+   * Botão "Desativar" (DELETE do CRUD):
+   *   DELETE /api/equipamentos/{id} -> EquipamentoController.excluir (herdado de CrudController)
+   *   -> CrudService.excluir -> EquipamentoService.antesDeExcluir: não deixa desativar se estiver
+   *      "Em uso" ou com reservas ativas (SELECT ... FROM reserva ... status IN (...))
+   *   -> AbstractDao.desativar -> UPDATE equipamento SET ativo = FALSE WHERE id = ? AND tenant_id = ?
+   *   -> INSERT INTO historico (... 'DESATIVACAO' ...)   (RN11: o registro continua no banco)
+   * Responde 204 (sem conteúdo); a tela mostra a mensagem e chama recarregar() para refazer o GET.
+   */
   const desativar = async (eq) => {
     if (!window.confirm(`Deseja desativar "${eq.nome}"?`)) return;
     setErroAcao(null);
@@ -46,6 +83,7 @@ export default function EquipmentList() {
     }
   };
 
+  // JSX: cabeçalho, filtros e depois tabela (admin/técnico) ou grade de cards (aluno/professor).
   return (
     <Layout fullWidth>
       <div className="page-header-row">

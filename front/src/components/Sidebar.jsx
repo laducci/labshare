@@ -1,3 +1,15 @@
+/*
+ * ============================================================
+ *  Sidebar.jsx  |  Camada: Front-end (componente de menu lateral)
+ *  Responsável na apresentação: Todos  |  Atividade: Q2 (variabilidade: itens por recurso do cliente), Q3 (menu por configuração)
+ * ------------------------------------------------------------
+ *  O que faz: monta o menu lateral a partir de uma CONFIGURAÇÃO (objeto MENUS): cada perfil tem
+ *  sua lista de itens, e itens com "feature" só aparecem se o cliente tiver esse recurso ligado
+ *  (hasFeature). Também mostra o usuário logado e o botão Sair. Tem versão fixa (desktop) e gaveta (celular).
+ *  Quem chama: Layout.jsx.
+ *  Chama: AppContext (user, logout, hasFeature), utils/format (PERFIS), React Router (Link, navigate).
+ * ============================================================
+ */
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -30,6 +42,7 @@ import { PERFIS } from '../utils/format';
  * - "feature" esconde itens de módulos que o cliente não tem (VARIABILIDADE)
  * Para um novo cliente/módulo basta acrescentar uma linha aqui.
  */
+// Menu de quem pede reservas (aluno e professor usam o mesmo).
 const MENU_SOLICITANTE = [
   { path: '/home', label: 'Início', icon: Home },
   { path: '/equipamentos', label: 'Equipamentos', icon: Package },
@@ -39,6 +52,8 @@ const MENU_SOLICITANTE = [
   { path: '/perfil', label: 'Perfil', icon: User },
 ];
 
+// Um menu por perfil. Chave = user.perfil (vem do backend). "feature" = recurso do cliente exigido
+// (approvalRequired, costCenter, lateFee): sem ele o item nem aparece (VARIABILIDADE).
 const MENUS = {
   aluno: MENU_SOLICITANTE,
   professor: MENU_SOLICITANTE,
@@ -76,23 +91,29 @@ const MENUS = {
   ],
 };
 
+// Props: mobileOpen = gaveta aberta no celular; onClose = função do Layout para fechá-la.
 export default function Sidebar({ mobileOpen, onClose }) {
   const { user, logout, hasFeature } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Sem usuário logado não há menu.
   if (!user) return null;
 
+  // Pega o menu do perfil e remove os itens cujo recurso o cliente não tem (hasFeature).
   const items = (MENUS[user.perfil] || MENU_SOLICITANTE).filter(
     (item) => !item.feature || hasFeature(item.feature)
   );
 
+  // Botão "Sair": limpa a sessão (AppContext) e navega para a tela de login.
   const handleLogout = () => {
     logout();
     navigate('/login');
     onClose?.();
   };
 
+  // Conteúdo do menu, montado uma vez e usado nas duas versões (desktop e celular).
+  // O item fica "active" quando a URL atual é a do item ou uma subpágina dele (ex.: /equipamentos/3/editar).
   const content = (
     <>
       <Link to={items[0]?.path || '/home'} className="sidebar-brand" onClick={onClose}>
@@ -140,6 +161,8 @@ export default function Sidebar({ mobileOpen, onClose }) {
     </>
   );
 
+  // Duas versões do mesmo menu: <aside> fixo (desktop) e gaveta sobreposta com fundo escuro (celular);
+  // o CSS decide qual aparece pelo tamanho da tela.
   return (
     <>
       <aside className="app-sidebar">{content}</aside>
