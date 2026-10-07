@@ -18,10 +18,14 @@ public class Categoria extends EntidadeBase {
     private String nome;
     // Nome do ícone mostrado no frontend (CategoryIcon); padrão "cpu".
     private String icone = "cpu";
+    // AIE (Medição): grupo patrimonial (Sistema de Patrimônio) do sistema externo; validado pelo LeitorSistemaExterno.
+    private String grupoPatrimonial;
 
     // Getters e setters: usados pelo Jackson para converter objeto <-> JSON (e pelos DAOs/RowMapper ao ler do banco).
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
     public String getIcone() { return icone; }
     public void setIcone(String icone) { this.icone = icone; }
+    public String getGrupoPatrimonial() { return grupoPatrimonial; }
+    public void setGrupoPatrimonial(String grupoPatrimonial) { this.grupoPatrimonial = grupoPatrimonial; }
 }

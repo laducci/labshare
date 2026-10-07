@@ -43,14 +43,14 @@ public class UsuarioDao extends AbstractDao<Usuario> {
     // Passo abstrato: colunas gravadas. "senha_hash" guarda o hash BCrypt, nunca a senha (RNF04).
     @Override
     protected List<String> colunas() {
-        return List.of("nome", "email", "senha_hash", "perfil");
+        return List.of("nome", "email", "senha_hash", "perfil", "matricula");
     }
 
     // Passo abstrato: valores na MESMA ordem das colunas. O perfil é gravado pelo rótulo
     // (ex.: "aluno", "tecnico"), que é o texto usado no banco e no frontend.
     @Override
     protected Object[] valores(Usuario u) {
-        return new Object[]{u.getNome(), u.getEmail(), u.getSenhaHash(), u.getPerfil().getRotulo()};
+        return new Object[]{u.getNome(), u.getEmail(), u.getSenhaHash(), u.getPerfil().getRotulo(), u.getMatricula()};
     }
 
     // Passo abstrato: linha do banco -> objeto Usuario. Perfil.de converte o rótulo de volta no enum.
@@ -60,6 +60,7 @@ public class UsuarioDao extends AbstractDao<Usuario> {
         u.setNome(rs.getString("nome"));
         u.setEmail(rs.getString("email"));
         u.setSenhaHash(rs.getString("senha_hash"));
+        u.setMatricula(rs.getString("matricula"));
         u.setPerfil(Perfil.de(rs.getString("perfil")));
         return u;
     }

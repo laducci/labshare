@@ -8,6 +8,8 @@
  *  Carrega também as categorias e os locais para os selects.
  *  Quem chama: pages/CreateEquipment.jsx (sem id) e pages/EditEquipment.jsx (com id da URL).
  *  Chama: useApi (GET /equipamentos/{id}, /categorias, /locais), api.post/put (/equipamentos), navigate.
+ *  Medição (AIE "Bem patrimonial", Laura): botão "Consultar no patrimônio" -> GET /api/integracoes/patrimonio/{numero}
+ *  traz os dados do bem do Sistema de Patrimônio (só leitura) e preenche nome/descrição.
  * ============================================================
  */
 import { useEffect, useState } from 'react';
@@ -17,6 +19,7 @@ import StatusBadge from './StatusBadge';
 import { ErrorState, LoadingState } from './States';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
+import { formatDateBR, formatMoney } from '../utils/format';
 
 // Valores iniciais do formulário de cadastro. Itens são texto (um por linha) enquanto estão no formulário.
 const VAZIO = {
@@ -46,6 +49,9 @@ export default function EquipmentForm({ equipamentoId }) {
   const [form, setForm] = useState(edicao ? null : VAZIO);
   const [erro, setErro] = useState(null);
   const [salvando, setSalvando] = useState(false);
+  // Resultado da consulta ao Sistema de Patrimônio (AIE): null = ainda não consultou.
+  const [bem, setBem] = useState(null);
+  const [erroBem, setErroBem] = useState(null);
 
   // useEffect roda quando o GET do equipamento termina (dependência existente.dados): copia os dados
   // para o formulário, trocando null por '' (inputs controlados não aceitam null) e listas por texto.
@@ -72,6 +78,26 @@ export default function EquipmentForm({ equipamentoId }) {
   const update = (campo) => (e) => setForm((prev) => ({ ...prev, [campo]: e.target.value }));
   const linhas = (texto) => texto.split('\n').map((s) => s.trim()).filter(Boolean);
   const statusTravado = edicao && STATUS_DO_FLUXO.includes(form.status);
+
+  // Botão "Consultar no patrimônio" (AIE, Medição): GET /api/integracoes/patrimonio/PAT-2024-001.
+  // O backend lê o arquivo do sistema externo (SistemaPatrimonioBens) — NÃO grava nada no nosso banco.
+  // Se nome/descrição estiverem vazios, copia do bem para o usuário não redigitar.
+  const consultarPatrimonio = async () => {
+    setErroBem(null);
+    setBem(null);
+    if (!form.patrimonio.trim()) { setErroBem('Informe o número de patrimônio.'); return; }
+    try {
+      const b = await api.get(`/integracoes/patrimonio/${encodeURIComponent(form.patrimonio.trim())}`);
+      setBem(b);
+      setForm((prev) => ({
+        ...prev,
+        nome: prev.nome || b.descricao,
+        descricao: prev.descricao || `${b.marca} ${b.modelo} – nº de série ${b.numeroSerie}.`,
+      }));
+    } catch (err) {
+      setErroBem(err.message);
+    }
+  };
 
   // Botão "Salvar equipamento": monta o JSON (ids viram Number, textos viram listas) e chama
   // PUT /api/equipamentos/{id} (edição -> UPDATE) ou POST /api/equipamentos (novo -> INSERT).
@@ -120,9 +146,30 @@ export default function EquipmentForm({ equipamentoId }) {
             </div>
             <div className="form-group">
               <label className="form-label" htmlFor="patrimonio">Número de patrimônio</label>
-              <input id="patrimonio" className="form-input" value={form.patrimonio} onChange={update('patrimonio')} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input id="patrimonio" className="form-input" value={form.patrimonio} onChange={update('patrimonio')} placeholder="Ex.: PAT-2025-031" />
+                <button type="button" className="btn btn-secondary" style={{ whiteSpace: 'nowrap' }} onClick={consultarPatrimonio}>
+                  Consultar no patrimônio
+                </button>
+              </div>
             </div>
           </div>
+          {/* Painel com os dados do bem vindos do Sistema de Patrimônio (AIE). */}
+          {erroBem && <ErrorState mensagem={erroBem} />}
+          {bem && (
+            <div className={bem.situacao === 'BAIXADO' ? 'info-panel warning-panel' : 'info-panel'} style={{ marginBottom: 16 }} data-testid="painel-patrimonio">
+              <strong>Sistema de Patrimônio – {bem.numero}</strong>
+              {bem.situacao === 'BAIXADO' && <> · bem BAIXADO: não pode entrar no acervo de empréstimo.</>}
+              <div className="aie-grid">
+                <span>Descrição</span><b>{bem.descricao}</b>
+                <span>Marca / modelo</span><b>{bem.marca} {bem.modelo}</b>
+                <span>Nº de série</span><b>{bem.numeroSerie}</b>
+                <span>Aquisição</span><b>{formatDateBR(bem.dataAquisicao)} · {formatMoney(bem.valorAquisicao)}</b>
+                <span>Situação</span><b>{bem.situacao}</b>
+                <span>Unidade responsável</span><b>{bem.unidadeResponsavel}</b>
+              </div>
+            </div>
+          )}
           <div className="form-group">
             <label className="form-label" htmlFor="categoria">Categoria *</label>
             <select id="categoria" className="form-select" value={form.categoriaId} onChange={update('categoriaId')} required>

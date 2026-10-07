@@ -21,6 +21,8 @@ import br.pucpr.labshare.model.Ocorrencia;
 import br.pucpr.labshare.model.StatusManutencao;
 import br.pucpr.labshare.model.StatusOcorrencia;
 import br.pucpr.labshare.notificacao.AvisoManutencaoConcluida;
+import br.pucpr.labshare.integracao.FornecedorAssistencia;
+import br.pucpr.labshare.integracao.SistemaCompras;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -36,13 +38,18 @@ public class ManutencaoService extends CrudService<Manutencao> {
     private final AvisoManutencaoConcluida avisoConcluida;
 
     // Injeção pelo construtor: o Spring entrega DAO, outros services e a notificação (Template Method).
+    // AIE "Fornecedores de assistência técnica": só leitura, valida o CNPJ escolhido.
+    private final SistemaCompras compras;
+
     public ManutencaoService(ManutencaoDao dao, OcorrenciaService ocorrencias, EquipamentoService equipamentos,
-                             AvisoManutencaoConcluida avisoConcluida, HistoricoService historico, TenantService tenants) {
+                             AvisoManutencaoConcluida avisoConcluida, HistoricoService historico, TenantService tenants,
+                             SistemaCompras compras) {
         super(dao, historico, tenants);
         this.manutencaoDao = dao;
         this.ocorrencias = ocorrencias;
         this.equipamentos = equipamentos;
         this.avisoConcluida = avisoConcluida;
+        this.compras = compras;
     }
 
     // Nome usado no histórico e nas mensagens.
@@ -58,6 +65,7 @@ public class ManutencaoService extends CrudService<Manutencao> {
             obrigatorio(m.getOcorrenciaId(), "Ocorrência");
         }
         exigir(m.getStatus() != StatusManutencao.CONCLUIDA, "Para concluir, use o botão \"Finalizar manutenção\".");
+        validarFornecedor(m, ctx);
     }
 
     // Criação (existente == null): copia o equipamento da ocorrência e inicia "Em andamento".
@@ -114,7 +122,9 @@ public class ManutencaoService extends CrudService<Manutencao> {
             if (dados.getDescricaoReparo() != null) m.setDescricaoReparo(dados.getDescricaoReparo());
             if (dados.getPecasSubstituidas() != null) m.setPecasSubstituidas(dados.getPecasSubstituidas());
             if (dados.getResponsavelId() != null) m.setResponsavelId(dados.getResponsavelId());
+            if (dados.getFornecedorCnpj() != null) m.setFornecedorCnpj(dados.getFornecedorCnpj());
         }
+        validarFornecedor(m, ctx);
         m.concluir();
         manutencaoDao.atualizar(m);
 
@@ -138,5 +148,15 @@ public class ManutencaoService extends CrudService<Manutencao> {
         Manutencao concluida = buscar(id, ctx);
         avisoConcluida.enviar(concluida, ctx.tenantId());   // Template Method
         return concluida;
+    }
+
+    /** Medição (AIE): se a manutenção usa assistência externa, o fornecedor precisa existir e ter contrato vigente. */
+    private void validarFornecedor(Manutencao m, Contexto ctx) {
+        if (m.getFornecedorCnpj() != null && m.getFornecedorCnpj().isBlank()) m.setFornecedorCnpj(null);
+        if (m.getFornecedorCnpj() == null) return;
+        FornecedorAssistencia f = compras.buscar(ctx.tenantId(), m.getFornecedorCnpj())
+                .orElseThrow(() -> new br.pucpr.labshare.exception.RegraNegocioException(
+                        "O fornecedor " + m.getFornecedorCnpj() + " não está cadastrado no Sistema de Compras."));
+        exigir(f.contratoVigente(), "O contrato do fornecedor " + f.nomeFantasia() + " não está vigente no Sistema de Compras.");
     }
 }

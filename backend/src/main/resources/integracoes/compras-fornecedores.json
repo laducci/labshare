@@ -1,0 +1,120 @@
+{
+  "sistema": "Sistema de Compras / Contratos",
+  "descricao": "Fornecedores de assistência técnica cadastrados pelo setor de compras, com situação do contrato.",
+  "dados": {
+    "universidade": [
+      {
+        "cnpj": "12.345.678/0001-90",
+        "razaoSocial": "Eletrotec Assistência Técnica Ltda.",
+        "nomeFantasia": "Eletrotec",
+        "especialidade": "Eletrônica e instrumentos de medição",
+        "telefone": "(41) 3333-1200",
+        "email": "chamados@eletrotec.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "23.456.789/0001-01",
+        "razaoSocial": "Imagem & Som Serviços Ltda.",
+        "nomeFantasia": "Imagem & Som",
+        "especialidade": "Câmeras e equipamentos audiovisuais",
+        "telefone": "(41) 3222-4455",
+        "email": "suporte@imagemesom.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "34.567.890/0001-12",
+        "razaoSocial": "InfoReparo Informática ME",
+        "nomeFantasia": "InfoReparo",
+        "especialidade": "Computadores e notebooks",
+        "telefone": "(41) 3111-9080",
+        "email": "os@inforeparo.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "45.678.901/0001-23",
+        "razaoSocial": "Ferramentas Paraná Ltda.",
+        "nomeFantasia": "FerraPR",
+        "especialidade": "Ferramentas elétricas",
+        "telefone": "(41) 3555-7788",
+        "email": "contato@ferrapr.com.br",
+        "contratoVigente": false
+      }
+    ],
+    "empresa": [
+      {
+        "cnpj": "12.345.678/0001-90",
+        "razaoSocial": "Eletrotec Assistência Técnica Ltda.",
+        "nomeFantasia": "Eletrotec",
+        "especialidade": "Eletrônica e instrumentos de medição",
+        "telefone": "(41) 3333-1200",
+        "email": "chamados@eletrotec.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "23.456.789/0001-01",
+        "razaoSocial": "Imagem & Som Serviços Ltda.",
+        "nomeFantasia": "Imagem & Som",
+        "especialidade": "Câmeras e equipamentos audiovisuais",
+        "telefone": "(41) 3222-4455",
+        "email": "suporte@imagemesom.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "34.567.890/0001-12",
+        "razaoSocial": "InfoReparo Informática ME",
+        "nomeFantasia": "InfoReparo",
+        "especialidade": "Computadores e notebooks",
+        "telefone": "(41) 3111-9080",
+        "email": "os@inforeparo.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "45.678.901/0001-23",
+        "razaoSocial": "Ferramentas Paraná Ltda.",
+        "nomeFantasia": "FerraPR",
+        "especialidade": "Ferramentas elétricas",
+        "telefone": "(41) 3555-7788",
+        "email": "contato@ferrapr.com.br",
+        "contratoVigente": false
+      }
+    ],
+    "escola_tecnica": [
+      {
+        "cnpj": "12.345.678/0001-90",
+        "razaoSocial": "Eletrotec Assistência Técnica Ltda.",
+        "nomeFantasia": "Eletrotec",
+        "especialidade": "Eletrônica e instrumentos de medição",
+        "telefone": "(41) 3333-1200",
+        "email": "chamados@eletrotec.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "23.456.789/0001-01",
+        "razaoSocial": "Imagem & Som Serviços Ltda.",
+        "nomeFantasia": "Imagem & Som",
+        "especialidade": "Câmeras e equipamentos audiovisuais",
+        "telefone": "(41) 3222-4455",
+        "email": "suporte@imagemesom.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "34.567.890/0001-12",
+        "razaoSocial": "InfoReparo Informática ME",
+        "nomeFantasia": "InfoReparo",
+        "especialidade": "Computadores e notebooks",
+        "telefone": "(41) 3111-9080",
+        "email": "os@inforeparo.com.br",
+        "contratoVigente": true
+      },
+      {
+        "cnpj": "45.678.901/0001-23",
+        "razaoSocial": "Ferramentas Paraná Ltda.",
+        "nomeFantasia": "FerraPR",
+        "especialidade": "Ferramentas elétricas",
+        "telefone": "(41) 3555-7788",
+        "email": "contato@ferrapr.com.br",
+        "contratoVigente": false
+      }
+    ]
+  }
+}

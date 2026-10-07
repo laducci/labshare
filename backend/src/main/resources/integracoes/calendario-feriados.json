@@ -1,0 +1,157 @@
+{
+  "sistema": "Calendário Acadêmico / Calendário Corporativo",
+  "descricao": "Feriados e recessos. Nesses dias o laboratório não funciona: não há retirada nem devolução.",
+  "dados": {
+    "universidade": [
+      {
+        "data": "2026-10-12",
+        "descricao": "Nossa Senhora Aparecida",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-02",
+        "descricao": "Finados",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-15",
+        "descricao": "Proclamação da República",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-20",
+        "descricao": "Dia da Consciência Negra",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-12-25",
+        "descricao": "Natal",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2027-01-01",
+        "descricao": "Confraternização Universal",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-09-08",
+        "descricao": "Nossa Senhora da Luz (Curitiba)",
+        "tipo": "Municipal"
+      },
+      {
+        "data": "2026-12-28",
+        "descricao": "Recesso acadêmico",
+        "tipo": "Recesso"
+      },
+      {
+        "data": "2026-12-29",
+        "descricao": "Recesso acadêmico",
+        "tipo": "Recesso"
+      },
+      {
+        "data": "2026-12-30",
+        "descricao": "Recesso acadêmico",
+        "tipo": "Recesso"
+      },
+      {
+        "data": "2026-12-31",
+        "descricao": "Recesso acadêmico",
+        "tipo": "Recesso"
+      }
+    ],
+    "empresa": [
+      {
+        "data": "2026-10-12",
+        "descricao": "Nossa Senhora Aparecida",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-02",
+        "descricao": "Finados",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-15",
+        "descricao": "Proclamação da República",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-20",
+        "descricao": "Dia da Consciência Negra",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-12-25",
+        "descricao": "Natal",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2027-01-01",
+        "descricao": "Confraternização Universal",
+        "tipo": "Nacional"
+      }
+    ],
+    "escola_tecnica": [
+      {
+        "data": "2026-10-12",
+        "descricao": "Nossa Senhora Aparecida",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-02",
+        "descricao": "Finados",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-15",
+        "descricao": "Proclamação da República",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-11-20",
+        "descricao": "Dia da Consciência Negra",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-12-25",
+        "descricao": "Natal",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2027-01-01",
+        "descricao": "Confraternização Universal",
+        "tipo": "Nacional"
+      },
+      {
+        "data": "2026-09-08",
+        "descricao": "Nossa Senhora da Luz (Curitiba)",
+        "tipo": "Municipal"
+      },
+      {
+        "data": "2026-10-15",
+        "descricao": "Dia do Professor",
+        "tipo": "Institucional"
+      },
+      {
+        "data": "2026-12-28",
+        "descricao": "Recesso acadêmico",
+        "tipo": "Recesso"
+      },
+      {
+        "data": "2026-12-29",
+        "descricao": "Recesso acadêmico",
+        "tipo": "Recesso"
+      },
+      {
+        "data": "2026-12-30",
+        "descricao": "Recesso acadêmico",
+        "tipo": "Recesso"
+      },
+      {
+        "data": "2026-12-31",
+        "descricao": "Recesso acadêmico",
+        "tipo": "Recesso"
+      }
+    ]
+  }
+}

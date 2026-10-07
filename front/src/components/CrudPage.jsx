@@ -58,12 +58,19 @@ export default function CrudPage({ config }) {
   const a = config.feminino ? 'a' : 'o'; // concordância: Nova categoria / Novo local
 
   // Carrega as opções dos selects ligados a outra tabela (ex.: categoria do equipamento)
+  // ou a um SISTEMA EXTERNO (AIE, Medição): ex. GET /api/integracoes/salas. Para os AIEs a chave
+  // não é o id do nosso banco e sim um código do outro sistema, por isso a config pode trocar
+  // o "valor" com opcoesDe.chave (ex.: (s) => s.codigo). Guardamos o item inteiro para o "preenche".
   useEffect(() => {
     campos.filter((c) => c.opcoesDe).forEach((c) => {
       api.get(c.opcoesDe.endpoint)
         .then((lista) => setOpcoes((prev) => ({
           ...prev,
-          [c.nome]: lista.map((item) => ({ valor: item.id, rotulo: c.opcoesDe.rotulo(item) })),
+          [c.nome]: lista.map((item) => ({
+            valor: c.opcoesDe.chave ? c.opcoesDe.chave(item) : item.id,
+            rotulo: c.opcoesDe.rotulo(item),
+            item,
+          })),
         })))
         .catch(() => setOpcoes((prev) => ({ ...prev, [c.nome]: [] })));
     });
@@ -94,7 +101,16 @@ export default function CrudPage({ config }) {
   };
 
   // Atualiza só o campo digitado, mantendo os outros (spread ...prev).
-  const alterarCampo = (campo, valor) => setForm((prev) => ({ ...prev, [campo.nome]: valor }));
+  // Se o campo tem "preenche" (ex.: escolher a matrícula no sistema acadêmico), copia para o
+  // formulário os dados que o sistema externo já tem (nome, e-mail...) — o usuário não redigita.
+  const alterarCampo = (campo, valor) => setForm((prev) => {
+    const novo = { ...prev, [campo.nome]: valor };
+    if (campo.preenche && valor) {
+      const escolhido = (opcoes[campo.nome] || []).find((o) => String(o.valor) === String(valor));
+      if (escolhido) Object.assign(novo, campo.preenche(escolhido.item, prev));
+    }
+    return novo;
+  });
 
   /** Converte o formulário no JSON que o backend espera. */
   const montarCorpo = () => {
@@ -104,7 +120,9 @@ export default function CrudPage({ config }) {
     campos.forEach((c) => {
       const v = corpo[c.nome];
       if (c.tipo === 'linhas') corpo[c.nome] = String(v || '').split('\n').map((s) => s.trim()).filter(Boolean);
-      if ((c.tipo === 'number' || c.opcoesDe) && v !== undefined) corpo[c.nome] = v === '' || v === null ? null : Number(v);
+      // Selects de AIE (opcoesDe.chave) guardam código em texto: só viram null se vazios.
+      if ((c.tipo === 'number' || (c.opcoesDe && !c.opcoesDe.chave)) && v !== undefined) corpo[c.nome] = v === '' || v === null ? null : Number(v);
+      if (c.opcoesDe?.chave && v === '') corpo[c.nome] = null;
     });
     return corpo;
   };

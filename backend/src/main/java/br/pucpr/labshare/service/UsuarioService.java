@@ -19,6 +19,8 @@ import br.pucpr.labshare.model.Perfil;
 import br.pucpr.labshare.model.Tenant;
 import br.pucpr.labshare.model.Usuario;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import br.pucpr.labshare.integracao.PessoaInstitucional;
+import br.pucpr.labshare.integracao.SistemaAcademico;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,9 +34,14 @@ public class UsuarioService extends CrudService<Usuario> {
     private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
 
     // Injeção pelo construtor; o dao também vai para o CrudService (super).
-    public UsuarioService(UsuarioDao dao, HistoricoService historico, TenantService tenants) {
+    // AIE "Pessoas do Sistema Acadêmico/RH": só leitura, valida a matrícula.
+    private final SistemaAcademico academico;
+
+    public UsuarioService(UsuarioDao dao, HistoricoService historico, TenantService tenants,
+                          SistemaAcademico academico) {
         super(dao, historico, tenants);
         this.usuarioDao = dao;
+        this.academico = academico;
     }
 
     // Nome usado no histórico e nas mensagens.
@@ -49,6 +56,14 @@ public class UsuarioService extends CrudService<Usuario> {
         obrigatorio(u.getNome(), "Nome");
         obrigatorio(u.getEmail(), "E-mail");
         obrigatorio(u.getPerfil(), "Perfil");
+        // Medição (AIE): se informada, a matrícula precisa existir e estar ativa no Sistema Acadêmico/RH.
+        if (u.getMatricula() != null && u.getMatricula().isBlank()) u.setMatricula(null);
+        if (u.getMatricula() != null) {
+            PessoaInstitucional pessoa = academico.buscar(ctx.tenantId(), u.getMatricula())
+                    .orElseThrow(() -> new br.pucpr.labshare.exception.RegraNegocioException(
+                            "A matrícula " + u.getMatricula() + " não existe no Sistema Acadêmico/RH."));
+            exigir(pessoa.estaAtiva(), "A matrícula " + u.getMatricula() + " está com situação " + pessoa.situacao() + " no Sistema Acadêmico.");
+        }
         exigir(u.getEmail().contains("@"), "Informe um e-mail válido.");
         // VARIABILIDADE: o perfil Gestor só existe para clientes com aprovação de gestor
         if (u.getPerfil() == Perfil.GESTOR) {

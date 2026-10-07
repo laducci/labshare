@@ -1,0 +1,100 @@
+{
+  "sistema": "Sistema Acadêmico / RH",
+  "descricao": "Alunos, professores e servidores com vínculo ativo. A matrícula identifica a pessoa na instituição.",
+  "dados": {
+    "universidade": [
+      {
+        "matricula": "2024100231",
+        "nome": "Lucas Almeida",
+        "email": "lucas@email.com",
+        "vinculo": "Aluno",
+        "curso": "Engenharia de Computação",
+        "situacao": "ATIVO"
+      },
+      {
+        "matricula": "2023200417",
+        "nome": "Mariana Costa",
+        "email": "mariana@email.com",
+        "vinculo": "Aluno",
+        "curso": "Design",
+        "situacao": "ATIVO"
+      },
+      {
+        "matricula": "P-08812",
+        "nome": "Ricardo Nunes",
+        "email": "ricardo@email.com",
+        "vinculo": "Professor",
+        "curso": "Engenharia Elétrica",
+        "situacao": "ATIVO"
+      },
+      {
+        "matricula": "S-01290",
+        "nome": "Carlos Ferreira",
+        "email": "carlos@email.com",
+        "vinculo": "Servidor",
+        "curso": "Laboratórios",
+        "situacao": "ATIVO"
+      },
+      {
+        "matricula": "S-01377",
+        "nome": "Fernanda Rocha",
+        "email": "fernanda@email.com",
+        "vinculo": "Servidor",
+        "curso": "Manutenção",
+        "situacao": "ATIVO"
+      },
+      {
+        "matricula": "2025100888",
+        "nome": "Ana Souza",
+        "email": "ana@email.com",
+        "vinculo": "Aluno",
+        "curso": "Engenharia de Software",
+        "situacao": "ATIVO"
+      },
+      {
+        "matricula": "2022100190",
+        "nome": "Pedro Henrique Lima",
+        "email": "pedro@email.com",
+        "vinculo": "Aluno",
+        "curso": "Engenharia Mecânica",
+        "situacao": "TRANCADO"
+      }
+    ],
+    "empresa": [
+      {
+        "matricula": "RH-1022",
+        "nome": "Bruno Tavares",
+        "email": "bruno@empresa.com",
+        "vinculo": "Colaborador",
+        "curso": "Engenharia de Produto",
+        "situacao": "ATIVO"
+      },
+      {
+        "matricula": "RH-1088",
+        "nome": "Juliana Prado",
+        "email": "juliana@empresa.com",
+        "vinculo": "Colaborador",
+        "curso": "Marketing",
+        "situacao": "ATIVO"
+      }
+    ],
+    "escola_tecnica": [
+      {
+        "matricula": "ET-2026-014",
+        "nome": "Igor Salles",
+        "email": "igor@escolatecnica.com",
+        "vinculo": "Aluno",
+        "curso": "Técnico em Eletrônica",
+        "situacao": "ATIVO"
+      },
+      {
+        "matricula": "ET-2026-022",
+        "nome": "Beatriz Nogueira",
+        "email": "beatriz@escolatecnica.com",
+        "vinculo": "Aluno",
+        "curso": "Técnico em Automação",
+        "situacao": "ATIVO"
+      }
+    ]
+  }
+}

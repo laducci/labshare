@@ -1,0 +1,117 @@
+{
+  "sistema": "Sistema de Patrimônio da instituição",
+  "descricao": "Grupos (classes) patrimoniais usados para classificar os bens e calcular depreciação.",
+  "dados": {
+    "universidade": [
+      {
+        "codigo": "GP-ELE",
+        "nome": "Equipamentos eletrônicos",
+        "descricao": "Kits, placas, instrumentos de medição",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-AV",
+        "nome": "Áudio e vídeo",
+        "descricao": "Câmeras, projetores, microfones",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-INF",
+        "nome": "Equipamentos de informática",
+        "descricao": "Computadores, notebooks, periféricos",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-FER",
+        "nome": "Ferramentas e utensílios",
+        "descricao": "Ferramentas manuais e elétricas",
+        "vidaUtilAnos": 10,
+        "taxaDepreciacaoAnual": 10.0
+      },
+      {
+        "codigo": "GP-MOB",
+        "nome": "Mobiliário",
+        "descricao": "Mesas, bancadas, armários",
+        "vidaUtilAnos": 10,
+        "taxaDepreciacaoAnual": 10.0
+      }
+    ],
+    "empresa": [
+      {
+        "codigo": "GP-ELE",
+        "nome": "Equipamentos eletrônicos",
+        "descricao": "Kits, placas, instrumentos de medição",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-AV",
+        "nome": "Áudio e vídeo",
+        "descricao": "Câmeras, projetores, microfones",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-INF",
+        "nome": "Equipamentos de informática",
+        "descricao": "Computadores, notebooks, periféricos",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-FER",
+        "nome": "Ferramentas e utensílios",
+        "descricao": "Ferramentas manuais e elétricas",
+        "vidaUtilAnos": 10,
+        "taxaDepreciacaoAnual": 10.0
+      },
+      {
+        "codigo": "GP-MOB",
+        "nome": "Mobiliário",
+        "descricao": "Mesas, bancadas, armários",
+        "vidaUtilAnos": 10,
+        "taxaDepreciacaoAnual": 10.0
+      }
+    ],
+    "escola_tecnica": [
+      {
+        "codigo": "GP-ELE",
+        "nome": "Equipamentos eletrônicos",
+        "descricao": "Kits, placas, instrumentos de medição",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-AV",
+        "nome": "Áudio e vídeo",
+        "descricao": "Câmeras, projetores, microfones",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-INF",
+        "nome": "Equipamentos de informática",
+        "descricao": "Computadores, notebooks, periféricos",
+        "vidaUtilAnos": 5,
+        "taxaDepreciacaoAnual": 20.0
+      },
+      {
+        "codigo": "GP-FER",
+        "nome": "Ferramentas e utensílios",
+        "descricao": "Ferramentas manuais e elétricas",
+        "vidaUtilAnos": 10,
+        "taxaDepreciacaoAnual": 10.0
+      },
+      {
+        "codigo": "GP-MOB",
+        "nome": "Mobiliário",
+        "descricao": "Mesas, bancadas, armários",
+        "vidaUtilAnos": 10,
+        "taxaDepreciacaoAnual": 10.0
+      }
+    ]
+  }
+}

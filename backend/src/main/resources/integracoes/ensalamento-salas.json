@@ -1,0 +1,84 @@
+{
+  "sistema": "Sistema de Ensalamento",
+  "descricao": "Salas e laboratórios oficiais da instituição, com bloco, andar e capacidade.",
+  "dados": {
+    "universidade": [
+      {
+        "codigo": "BLA-112",
+        "nome": "Laboratório de Eletrônica 12",
+        "bloco": "Bloco A",
+        "andar": "1º andar",
+        "capacidade": 32,
+        "tipo": "Laboratório"
+      },
+      {
+        "codigo": "BLA-110",
+        "nome": "Laboratório de Eletrônica 10",
+        "bloco": "Bloco A",
+        "andar": "1º andar",
+        "capacidade": 28,
+        "tipo": "Laboratório"
+      },
+      {
+        "codigo": "BLC-005",
+        "nome": "Laboratório Multimídia 5",
+        "bloco": "Bloco C",
+        "andar": "Térreo",
+        "capacidade": 24,
+        "tipo": "Laboratório"
+      },
+      {
+        "codigo": "BLB-210",
+        "nome": "Sala Maker",
+        "bloco": "Bloco B",
+        "andar": "2º andar",
+        "capacidade": 20,
+        "tipo": "Espaço maker"
+      },
+      {
+        "codigo": "BLD-301",
+        "nome": "Laboratório de Informática 3",
+        "bloco": "Bloco D",
+        "andar": "3º andar",
+        "capacidade": 40,
+        "tipo": "Laboratório"
+      }
+    ],
+    "empresa": [
+      {
+        "codigo": "T1-305",
+        "nome": "Almoxarifado de TI",
+        "bloco": "Torre 1",
+        "andar": "3º andar",
+        "capacidade": 6,
+        "tipo": "Almoxarifado"
+      },
+      {
+        "codigo": "T2-101",
+        "nome": "Estúdio de Marketing",
+        "bloco": "Torre 2",
+        "andar": "1º andar",
+        "capacidade": 10,
+        "tipo": "Estúdio"
+      }
+    ],
+    "escola_tecnica": [
+      {
+        "codigo": "OF-01",
+        "nome": "Oficina Técnica",
+        "bloco": "Prédio principal",
+        "andar": "Térreo",
+        "capacidade": 30,
+        "tipo": "Oficina"
+      },
+      {
+        "codigo": "LAB-02",
+        "nome": "Laboratório de Automação",
+        "bloco": "Prédio principal",
+        "andar": "1º andar",
+        "capacidade": 25,
+        "tipo": "Laboratório"
+      }
+    ]
+  }
+}

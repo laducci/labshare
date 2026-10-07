@@ -25,6 +25,7 @@ import br.pucpr.labshare.model.Tenant;
 import br.pucpr.labshare.notificacao.AvisoReservaPendente;
 import br.pucpr.labshare.variabilidade.RegrasDoCliente;
 import br.pucpr.labshare.variabilidade.SeletorDeRegras;
+import br.pucpr.labshare.integracao.CalendarioAcademico;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -50,13 +51,18 @@ public class ReservaService extends CrudService<Reserva> {
     private final AvisoReservaPendente avisoReservaPendente;
 
     // Injeção pelo construtor: o Spring entrega DAO, services, o seletor de Strategy e a notificação.
+    // AIE "Calendário acadêmico": só leitura, bloqueia retirada/devolução em feriado.
+    private final CalendarioAcademico calendario;
+
     public ReservaService(ReservaDao dao, EquipamentoService equipamentos, SeletorDeRegras seletor,
-                          AvisoReservaPendente avisoReservaPendente, HistoricoService historico, TenantService tenants) {
+                          AvisoReservaPendente avisoReservaPendente, HistoricoService historico, TenantService tenants,
+                          CalendarioAcademico calendario) {
         super(dao, historico, tenants);
         this.reservaDao = dao;
         this.equipamentos = equipamentos;
         this.seletor = seletor;
         this.avisoReservaPendente = avisoReservaPendente;
+        this.calendario = calendario;
     }
 
     // Nome usado no histórico e nas mensagens.
@@ -76,6 +82,13 @@ public class ReservaService extends CrudService<Reserva> {
 
         // RN03 + prazo máximo lido do Singleton
         r.validarPeriodo(ConfiguracaoEmprestimo.getInstance().getPrazoMaximoDias());
+
+        // Medição (AIE "Calendário acadêmico"): o laboratório não abre em feriado/recesso,
+        // então não dá para retirar nem devolver nesses dias.
+        calendario.feriadoEm(ctx.tenantId(), r.getDataInicio()).ifPresent(f ->
+                exigir(false, "A retirada cai em " + f.descricao() + " (" + f.data().format(BR) + "): o laboratório estará fechado."));
+        calendario.feriadoEm(ctx.tenantId(), r.getDataFim()).ifPresent(f ->
+                exigir(false, "A devolução cai em " + f.descricao() + " (" + f.data().format(BR) + "): o laboratório estará fechado."));
 
         // RN01 / RN02
         // podeSerReservado() é falso se o equipamento estiver desativado, "Em manutenção",

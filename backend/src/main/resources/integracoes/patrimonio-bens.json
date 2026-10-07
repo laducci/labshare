@@ -1,0 +1,166 @@
+{
+  "sistema": "Sistema de Patrimônio da instituição",
+  "descricao": "Bens patrimoniais tombados. Mantido pelo setor de patrimônio; o LabShare só consulta.",
+  "dados": {
+    "universidade": [
+      {
+        "numero": "PAT-2024-001",
+        "descricao": "Kit didático Arduino Uno R3 com sensores",
+        "marca": "Arduino",
+        "modelo": "Uno R3",
+        "numeroSerie": "ARD-UNO-55821",
+        "dataAquisicao": "2024-02-15",
+        "valorAquisicao": 389.9,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Escola Politécnica"
+      },
+      {
+        "numero": "PAT-2024-002",
+        "descricao": "Kit didático Arduino Mega 2560",
+        "marca": "Arduino",
+        "modelo": "Mega 2560",
+        "numeroSerie": "ARD-MEGA-11873",
+        "dataAquisicao": "2024-02-15",
+        "valorAquisicao": 459.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Escola Politécnica"
+      },
+      {
+        "numero": "PAT-2024-003",
+        "descricao": "Shield de sensores para Arduino",
+        "marca": "Keyestudio",
+        "modelo": "Sensor Shield V5",
+        "numeroSerie": "KS-SH5-00342",
+        "dataAquisicao": "2024-03-02",
+        "valorAquisicao": 129.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Escola Politécnica"
+      },
+      {
+        "numero": "PAT-2024-010",
+        "descricao": "Osciloscópio digital de bancada 100 MHz",
+        "marca": "Rigol",
+        "modelo": "DS1102Z-E",
+        "numeroSerie": "DS1ZE2402110",
+        "dataAquisicao": "2024-04-10",
+        "valorAquisicao": 3290.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Escola Politécnica"
+      },
+      {
+        "numero": "PAT-2024-020",
+        "descricao": "Câmera digital profissional Full HD",
+        "marca": "Canon",
+        "modelo": "EOS Rebel T7",
+        "numeroSerie": "CN-T7-883120",
+        "dataAquisicao": "2024-05-20",
+        "valorAquisicao": 3899.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Escola de Belas Artes"
+      },
+      {
+        "numero": "PAT-2025-031",
+        "descricao": "Impressora 3D FDM",
+        "marca": "Creality",
+        "modelo": "Ender 3 V3",
+        "numeroSerie": "CR-E3V3-77210",
+        "dataAquisicao": "2025-03-12",
+        "valorAquisicao": 1799.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Sala Maker"
+      },
+      {
+        "numero": "PAT-2025-032",
+        "descricao": "Multímetro digital True RMS",
+        "marca": "Minipa",
+        "modelo": "ET-2082E",
+        "numeroSerie": "MP-2082-11450",
+        "dataAquisicao": "2025-03-12",
+        "valorAquisicao": 349.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Escola Politécnica"
+      },
+      {
+        "numero": "PAT-2019-114",
+        "descricao": "Projetor multimídia 3000 lumens",
+        "marca": "Epson",
+        "modelo": "PowerLite S41+",
+        "numeroSerie": "EP-S41-55019",
+        "dataAquisicao": "2019-08-01",
+        "valorAquisicao": 2150.0,
+        "situacao": "BAIXADO",
+        "unidadeResponsavel": "Escola Politécnica"
+      }
+    ],
+    "empresa": [
+      {
+        "numero": "EMP-0001",
+        "descricao": "Notebook workstation Dell Precision 3581",
+        "marca": "Dell",
+        "modelo": "Precision 3581",
+        "numeroSerie": "DL-PR-3581-0091",
+        "dataAquisicao": "2025-01-08",
+        "valorAquisicao": 11890.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "TI Interna"
+      },
+      {
+        "numero": "EMP-0002",
+        "descricao": "Câmera Full HD para vídeos institucionais",
+        "marca": "Sony",
+        "modelo": "ZV-E10",
+        "numeroSerie": "SN-ZVE10-44102",
+        "dataAquisicao": "2025-02-20",
+        "valorAquisicao": 4599.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Marketing"
+      },
+      {
+        "numero": "EMP-0003",
+        "descricao": "Projetor portátil",
+        "marca": "Epson",
+        "modelo": "EB-E01",
+        "numeroSerie": "EP-E01-99871",
+        "dataAquisicao": "2023-06-15",
+        "valorAquisicao": 2690.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Engenharia de Produto"
+      }
+    ],
+    "escola_tecnica": [
+      {
+        "numero": "ET-001",
+        "descricao": "Kit Arduino Uno para aulas práticas",
+        "marca": "Arduino",
+        "modelo": "Uno R3",
+        "numeroSerie": "ARD-UNO-77102",
+        "dataAquisicao": "2024-07-01",
+        "valorAquisicao": 359.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Curso Técnico em Eletrônica"
+      },
+      {
+        "numero": "ET-002",
+        "descricao": "Kit Arduino Mega para TCC",
+        "marca": "Arduino",
+        "modelo": "Mega 2560",
+        "numeroSerie": "ARD-MEGA-77230",
+        "dataAquisicao": "2024-07-01",
+        "valorAquisicao": 439.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Curso Técnico em Eletrônica"
+      },
+      {
+        "numero": "ET-010",
+        "descricao": "Multímetro digital com pontas de prova",
+        "marca": "Minipa",
+        "modelo": "ET-1002",
+        "numeroSerie": "MP-1002-30911",
+        "dataAquisicao": "2024-07-01",
+        "valorAquisicao": 189.0,
+        "situacao": "ATIVO",
+        "unidadeResponsavel": "Oficina Técnica"
+      }
+    ]
+  }
+}

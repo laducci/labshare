@@ -40,13 +40,13 @@ public class CategoriaDao extends AbstractDao<Categoria> {
     // Passo abstrato 2: colunas editáveis (id, tenant_id e ativo o AbstractDao já trata).
     @Override
     protected List<String> colunas() {
-        return List.of("nome", "icone");
+        return List.of("nome", "icone", "grupo_patrimonial");
     }
 
     // Passo abstrato 3: valores na MESMA ordem das colunas acima (preenchem os "?").
     @Override
     protected Object[] valores(Categoria c) {
-        return new Object[]{c.getNome(), c.getIcone()};
+        return new Object[]{c.getNome(), c.getIcone(), c.getGrupoPatrimonial()};
     }
 
     // Passo abstrato 4: transforma uma linha do SELECT em objeto Categoria.
@@ -55,6 +55,7 @@ public class CategoriaDao extends AbstractDao<Categoria> {
         Categoria c = new Categoria();
         c.setNome(rs.getString("nome"));
         c.setIcone(rs.getString("icone"));
+        c.setGrupoPatrimonial(rs.getString("grupo_patrimonial"));
         return c;
     }
 

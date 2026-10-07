@@ -32,6 +32,7 @@ import {
   Receipt,
   SlidersHorizontal,
   Landmark,
+  Database,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { PERFIS } from '../utils/format';
@@ -64,11 +65,13 @@ const MENUS = {
     { path: '/tecnico/devolucoes', label: 'Devoluções', icon: ArrowUpFromLine },
     { path: '/equipamentos', label: 'Equipamentos', icon: Package },
     { path: '/tecnico/ocorrencias', label: 'Ocorrências', icon: AlertTriangle },
+    { path: '/relatorios', label: 'Relatórios', icon: BarChart3 },
     { path: '/notificacoes', label: 'Notificações', icon: Bell },
   ],
   manutencao: [
     { path: '/manutencao/painel', label: 'Painel', icon: LayoutDashboard },
     { path: '/manutencao/historico', label: 'Histórico', icon: History },
+    { path: '/relatorios', label: 'Relatórios', icon: BarChart3 },
     { path: '/equipamentos', label: 'Equipamentos', icon: Package },
     { path: '/notificacoes', label: 'Notificações', icon: Bell },
   ],
@@ -87,6 +90,8 @@ const MENUS = {
     { path: '/manutencao/painel', label: 'Manutenções', icon: Wrench },
     { path: '/admin/centros-custo', label: 'Centros de custo', icon: Landmark, feature: 'costCenter' },
     { path: '/admin/multas', label: 'Multas', icon: Receipt, feature: 'lateFee' },
+    { path: '/relatorios', label: 'Relatórios', icon: BarChart3 },
+    { path: '/admin/integracoes', label: 'Sistemas externos', icon: Database },
     { path: '/admin/personalizacao', label: 'Personalização', icon: SlidersHorizontal },
   ],
 };

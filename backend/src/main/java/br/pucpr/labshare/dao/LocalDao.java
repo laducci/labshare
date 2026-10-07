@@ -39,13 +39,13 @@ public class LocalDao extends AbstractDao<Local> {
     // Passo abstrato: colunas editáveis.
     @Override
     protected List<String> colunas() {
-        return List.of("nome", "descricao");
+        return List.of("nome", "descricao", "codigo_sala");
     }
 
     // Passo abstrato: valores na mesma ordem das colunas (preenchem os "?").
     @Override
     protected Object[] valores(Local l) {
-        return new Object[]{l.getNome(), l.getDescricao()};
+        return new Object[]{l.getNome(), l.getDescricao(), l.getCodigoSala()};
     }
 
     // Passo abstrato: linha do banco -> objeto Local.
@@ -54,6 +54,7 @@ public class LocalDao extends AbstractDao<Local> {
         Local l = new Local();
         l.setNome(rs.getString("nome"));
         l.setDescricao(rs.getString("descricao"));
+        l.setCodigoSala(rs.getString("codigo_sala"));
         return l;
     }
 

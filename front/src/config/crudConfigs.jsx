@@ -24,7 +24,11 @@ import { formatDateBR, formatMoney, PERFIS } from '../utils/format';
  * sem escrever um novo componente. É a compactação de código focada em reuso.
  *
  * Campos:  { nome, rotulo, tipo: text|email|password|textarea|linhas|number|date|select,
- *            obrigatorio, opcoes: [{valor, rotulo}], opcoesDe: {endpoint, rotulo}, somenteCriacao }
+ *            obrigatorio, opcoes: [{valor, rotulo}], opcoesDe: {endpoint, rotulo, chave?}, somenteCriacao,
+ *            preenche?(itemEscolhido, formAtual) }
+ *   opcoesDe.chave: usado nos selects de SISTEMAS EXTERNOS (AIE, Medição): o valor salvo é o código
+ *                   do outro sistema (ex.: "BLA-112"), não um id do nosso banco.
+ *   preenche:       ao escolher a opção, copia dados do sistema externo para outros campos.
  * Colunas: { campo, rotulo, badge?, formato?(valor, item) }
  */
 
@@ -54,11 +58,19 @@ export const CRUDS = {
     campos: [
       { nome: 'nome', rotulo: 'Nome', obrigatorio: true, placeholder: 'Ex.: Robótica' },
       { nome: 'icone', rotulo: 'Ícone', tipo: 'select', opcoes: ICONES },
+      // Medição (AIE "Grupo patrimonial", João): a lista vem do Sistema de Patrimônio,
+      // GET /api/integracoes/grupos-patrimoniais. O LabShare só guarda o código (categoria.grupo_patrimonial).
+      {
+        nome: 'grupoPatrimonial', rotulo: 'Grupo patrimonial (Sistema de Patrimônio)',
+        opcoesDe: { endpoint: '/integracoes/grupos-patrimoniais', chave: (g) => g.codigo, rotulo: (g) => `${g.codigo} – ${g.nome}` },
+        ajuda: 'Consulta ao sistema externo de patrimônio (somente leitura).',
+      },
     ],
     // colunas = tabela; "formato" permite desenhar algo diferente do texto puro (aqui, o ícone)
     colunas: [
       { campo: 'icone', rotulo: 'Ícone', formato: (v) => <CategoryIcon name={v} size={18} /> },
       { campo: 'nome', rotulo: 'Nome' },
+      { campo: 'grupoPatrimonial', rotulo: 'Grupo patrimonial' },
     ],
   },
 
@@ -69,10 +81,19 @@ export const CRUDS = {
     // -> /api/locais (LocalController). Mesma estrutura de categorias: só muda a config.
     endpoint: '/locais',
     campos: [
+      // Medição (AIE "Salas do ensalamento", João): escolher a sala do sistema de ensalamento
+      // já preenche nome e referência (bloco/andar). GET /api/integracoes/salas.
+      {
+        nome: 'codigoSala', rotulo: 'Sala no ensalamento',
+        opcoesDe: { endpoint: '/integracoes/salas', chave: (s) => s.codigo, rotulo: (s) => `${s.codigo} – ${s.nome} (${s.capacidade} lugares)` },
+        preenche: (sala, atual) => ({ nome: atual.nome || sala.nome, descricao: `${sala.bloco}, ${sala.andar}` }),
+        ajuda: 'Consulta ao sistema externo de ensalamento (somente leitura).',
+      },
       { nome: 'nome', rotulo: 'Nome', obrigatorio: true, placeholder: 'Ex.: Laboratório de Eletrônica' },
       { nome: 'descricao', rotulo: 'Descrição / referência', placeholder: 'Ex.: Bloco A, 1º andar' },
     ],
     colunas: [
+      { campo: 'codigoSala', rotulo: 'Sala' },
       { campo: 'nome', rotulo: 'Nome' },
       { campo: 'descricao', rotulo: 'Descrição' },
     ],
@@ -88,6 +109,14 @@ export const CRUDS = {
     valoresIniciais: { perfil: 'aluno' },
     // VARIABILIDADE: o perfil "Gestor" só aparece para clientes com aprovação de gestor
     campos: ({ hasFeature }) => [
+      // Medição (AIE "Aluno/servidor do sistema acadêmico", Camilla): escolher a matrícula preenche
+      // nome e e-mail com o que o Sistema Acadêmico/RH já tem. GET /api/integracoes/pessoas.
+      {
+        nome: 'matricula', rotulo: 'Matrícula (Sistema Acadêmico/RH)',
+        opcoesDe: { endpoint: '/integracoes/pessoas', chave: (p) => p.matricula, rotulo: (p) => `${p.matricula} – ${p.nome} (${p.vinculo}, ${p.situacao})` },
+        preenche: (pessoa) => ({ nome: pessoa.nome, email: pessoa.email }),
+        ajuda: 'Opcional para administradores. Só matrículas ATIVAS são aceitas.',
+      },
       { nome: 'nome', rotulo: 'Nome completo', obrigatorio: true },
       { nome: 'email', rotulo: 'E-mail', tipo: 'email', obrigatorio: true },
       {
@@ -100,6 +129,7 @@ export const CRUDS = {
       { nome: 'senha', rotulo: 'Senha', tipo: 'password', ajuda: 'Mínimo 6 caracteres. Na edição, deixe em branco para manter a atual.' },
     ],
     colunas: [
+      { campo: 'matricula', rotulo: 'Matrícula' },
       { campo: 'nome', rotulo: 'Nome' },
       { campo: 'email', rotulo: 'E-mail' },
       { campo: 'perfil', rotulo: 'Perfil', formato: (v) => PERFIS[v] || v },
@@ -122,6 +152,7 @@ export const CRUDS = {
       { campo: 'ocorrenciaDescricao', rotulo: 'Problema' },
       { campo: 'descricaoReparo', rotulo: 'Reparo' },
       { campo: 'responsavelNome', rotulo: 'Responsável' },
+      { campo: 'fornecedorCnpj', rotulo: 'Assistência externa (CNPJ)', formato: (v) => v || 'Interna' },
       { campo: 'dataInicio', rotulo: 'Início', formato: formatDateBR },
       { campo: 'dataFim', rotulo: 'Fim', formato: (v) => (v ? formatDateBR(v) : '—') },
       { campo: 'status', rotulo: 'Status', badge: true },

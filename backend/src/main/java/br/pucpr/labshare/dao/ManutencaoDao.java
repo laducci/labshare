@@ -44,14 +44,14 @@ public class ManutencaoDao extends AbstractDao<Manutencao> {
     @Override
     protected List<String> colunas() {
         return List.of("equipamento_id", "ocorrencia_id", "responsavel_id", "descricao_reparo",
-                "pecas_substituidas", "data_inicio", "data_fim", "status");
+                "pecas_substituidas", "data_inicio", "data_fim", "status", "fornecedor_cnpj");
     }
 
     // Passo abstrato: valores na MESMA ordem das colunas.
     @Override
     protected Object[] valores(Manutencao m) {
         return new Object[]{m.getEquipamentoId(), m.getOcorrenciaId(), m.getResponsavelId(), m.getDescricaoReparo(),
-                m.getPecasSubstituidas(), m.getDataInicio(), m.getDataFim(), nomeEnum(m.getStatus())};
+                m.getPecasSubstituidas(), m.getDataInicio(), m.getDataFim(), nomeEnum(m.getStatus()), m.getFornecedorCnpj()};
     }
 
     // Gancho sobrescrito: JOIN com equipamento (sempre existe) e LEFT JOIN com ocorrência
@@ -91,6 +91,7 @@ public class ManutencaoDao extends AbstractDao<Manutencao> {
         m.setResponsavelNome(rs.getString("responsavel_nome"));
         m.setDescricaoReparo(rs.getString("descricao_reparo"));
         m.setPecasSubstituidas(rs.getString("pecas_substituidas"));
+        m.setFornecedorCnpj(rs.getString("fornecedor_cnpj"));
         m.setDataInicio(rs.getObject("data_inicio", LocalDate.class));
         m.setDataFim(rs.getObject("data_fim", LocalDate.class));
         m.setStatus(StatusManutencao.valueOf(rs.getString("status")));

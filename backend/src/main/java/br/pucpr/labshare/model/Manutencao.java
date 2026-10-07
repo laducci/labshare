@@ -30,6 +30,8 @@ public class Manutencao extends EntidadeBase {
     private String responsavelNome;       // JOIN (só leitura)
     private String descricaoReparo;
     private String pecasSubstituidas;
+    // AIE (Medição): CNPJ do fornecedor de assistência técnica (Sistema de Compras) do sistema externo; validado pelo LeitorSistemaExterno.
+    private String fornecedorCnpj;
     // A manutenção começa "hoje" e "Em andamento" por padrão.
     private LocalDate dataInicio = LocalDate.now();
     private LocalDate dataFim;
@@ -74,6 +76,8 @@ public class Manutencao extends EntidadeBase {
     public void setResponsavelNome(String responsavelNome) { this.responsavelNome = responsavelNome; }
     public String getDescricaoReparo() { return descricaoReparo; }
     public void setDescricaoReparo(String descricaoReparo) { this.descricaoReparo = descricaoReparo; }
+    public String getFornecedorCnpj() { return fornecedorCnpj; }
+    public void setFornecedorCnpj(String fornecedorCnpj) { this.fornecedorCnpj = fornecedorCnpj; }
     public String getPecasSubstituidas() { return pecasSubstituidas; }
     public void setPecasSubstituidas(String pecasSubstituidas) { this.pecasSubstituidas = pecasSubstituidas; }
     public LocalDate getDataInicio() { return dataInicio; }

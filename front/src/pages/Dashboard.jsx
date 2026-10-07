@@ -5,7 +5,7 @@
  * ------------------------------------------------------------
  *  O que faz: indicadores do administrador: quantidade de equipamentos, reservas, ocorrências
  *  e manutenções por status, e os equipamentos mais reservados do cliente.
- *  Quem chama: App.jsx, rotas /admin/dashboard e /admin/relatorios (rotaInicial do admin).
+ *  Quem chama: App.jsx, rota /admin/dashboard (rotaInicial do admin).
  *  Chama: GET /api/relatorios/resumo; navega para /admin/personalizacao e /equipamentos.
  * ============================================================
  */

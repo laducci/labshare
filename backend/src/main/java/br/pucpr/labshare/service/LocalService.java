@@ -15,6 +15,7 @@ package br.pucpr.labshare.service;
 import br.pucpr.labshare.config.Contexto;
 import br.pucpr.labshare.dao.LocalDao;
 import br.pucpr.labshare.model.Local;
+import br.pucpr.labshare.integracao.SistemaEnsalamento;
 import org.springframework.stereotype.Service;
 
 // @Service: o Spring cria uma única instância desta classe e a injeta no LocalController.
@@ -22,8 +23,13 @@ import org.springframework.stereotype.Service;
 public class LocalService extends CrudService<Local> {
 
     // Injeção pelo construtor; tudo é repassado para o CrudService (super).
-    public LocalService(LocalDao dao, HistoricoService historico, TenantService tenants) {
+    // AIE "Salas do ensalamento": só leitura, usado para validar a sala informada.
+    private final SistemaEnsalamento ensalamento;
+
+    public LocalService(LocalDao dao, HistoricoService historico, TenantService tenants,
+                        SistemaEnsalamento ensalamento) {
         super(dao, historico, tenants);
+        this.ensalamento = ensalamento;
     }
 
     // Nome usado no histórico e nas mensagens de erro.
@@ -36,5 +42,11 @@ public class LocalService extends CrudService<Local> {
     @Override
     protected void validar(Local l, Contexto ctx) {
         obrigatorio(l.getNome(), "Nome");
+        // Medição (AIE): a sala precisa existir no Sistema de Ensalamento.
+        if (l.getCodigoSala() != null && l.getCodigoSala().isBlank()) l.setCodigoSala(null);
+        if (l.getCodigoSala() != null) {
+            exigir(ensalamento.buscar(ctx.tenantId(), l.getCodigoSala()).isPresent(),
+                    "A sala " + l.getCodigoSala() + " não existe no Sistema de Ensalamento.");
+        }
     }
 }

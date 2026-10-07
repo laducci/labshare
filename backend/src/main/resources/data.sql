@@ -172,3 +172,23 @@ SELECT setval(pg_get_serial_sequence('local', 'id'),        GREATEST((SELECT MAX
 SELECT setval(pg_get_serial_sequence('centro_custo', 'id'), GREATEST((SELECT MAX(id) FROM centro_custo), 1));
 SELECT setval(pg_get_serial_sequence('equipamento', 'id'),  GREATEST((SELECT MAX(id) FROM equipamento), 1));
 SELECT setval(pg_get_serial_sequence('reserva', 'id'),      GREATEST((SELECT MAX(id) FROM reserva), 1));
+
+-- ---------- Referências aos sistemas externos (AIEs da Medição) ----------
+-- Só preenche se ainda estiver vazio (IS NULL), para não sobrescrever edições feitas pelas telas.
+UPDATE categoria SET grupo_patrimonial = 'GP-ELE' WHERE id IN (1, 7) AND grupo_patrimonial IS NULL;
+UPDATE categoria SET grupo_patrimonial = 'GP-AV'  WHERE id IN (2, 6) AND grupo_patrimonial IS NULL;
+UPDATE categoria SET grupo_patrimonial = 'GP-INF' WHERE id IN (3, 5) AND grupo_patrimonial IS NULL;
+UPDATE categoria SET grupo_patrimonial = 'GP-FER' WHERE id IN (4, 8) AND grupo_patrimonial IS NULL;
+UPDATE local SET codigo_sala = 'BLA-112' WHERE id = 1 AND codigo_sala IS NULL;
+UPDATE local SET codigo_sala = 'BLA-110' WHERE id = 2 AND codigo_sala IS NULL;
+UPDATE local SET codigo_sala = 'BLC-005' WHERE id = 3 AND codigo_sala IS NULL;
+UPDATE local SET codigo_sala = 'BLB-210' WHERE id = 4 AND codigo_sala IS NULL;
+UPDATE local SET codigo_sala = 'T1-305'  WHERE id = 5 AND codigo_sala IS NULL;
+UPDATE local SET codigo_sala = 'OF-01'   WHERE id = 6 AND codigo_sala IS NULL;
+UPDATE usuario SET matricula = '2024100231'  WHERE id = 1  AND matricula IS NULL;
+UPDATE usuario SET matricula = 'S-01290'     WHERE id = 2  AND matricula IS NULL;
+UPDATE usuario SET matricula = 'S-01377'     WHERE id = 3  AND matricula IS NULL;
+UPDATE usuario SET matricula = '2023200417'  WHERE id = 5  AND matricula IS NULL;
+UPDATE usuario SET matricula = 'P-08812'     WHERE id = 6  AND matricula IS NULL;
+UPDATE usuario SET matricula = 'RH-1022'     WHERE id = 8  AND matricula IS NULL;
+UPDATE usuario SET matricula = 'ET-2026-014' WHERE id = 12 AND matricula IS NULL;

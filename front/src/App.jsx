@@ -46,9 +46,14 @@ import ApprovalDetail from './pages/ApprovalDetail';
 import LateFeePanel from './pages/LateFeePanel';
 import TenantSettings from './pages/TenantSettings';
 import Dashboard from './pages/Dashboard';
+import Reports from './pages/Reports';
+import RelatorioView from './pages/RelatorioView';
+import ExternalSystems from './pages/ExternalSystems';
 
 // Perfis que podem abrir as telas de manutenção.
 const EQUIPE_MANUTENCAO = ['manutencao', 'admin'];
+// Perfis que veem a central de relatórios (Medição - SE). Quais relatórios cada um vê: relatorioConfigs.jsx.
+const EQUIPE_RELATORIOS = ['admin', 'tecnico', 'manutencao'];
 
 /** Atalho: rota protegida por perfil (e opcionalmente por recurso do cliente). */
 // roles = perfis permitidos (null = qualquer usuário logado); feature = recurso do cliente exigido.
@@ -115,7 +120,7 @@ function App() {
 
       {/* Administração */}
       <Route path="/admin/dashboard" element={P(['admin'], <Dashboard />)} />
-      <Route path="/admin/relatorios" element={P(['admin'], <Dashboard />)} />
+      <Route path="/admin/relatorios" element={<Navigate to="/relatorios" replace />} />
       <Route path="/admin/usuarios" element={P(['admin'], <Crud nome="usuarios" />)} />
       <Route path="/admin/categorias" element={P(['admin'], <Crud nome="categorias" />)} />
       <Route path="/admin/locais" element={P(['admin'], <Crud nome="locais" />)} />
@@ -124,6 +129,11 @@ function App() {
       {/* VARIABILIDADE: só existem para clientes com o recurso ligado */}
       <Route path="/admin/multas" element={P(['admin'], <LateFeePanel />, 'lateFee')} />
       <Route path="/admin/centros-custo" element={P(['admin'], <Crud nome="centrosCusto" />, 'costCenter')} />
+
+      {/* Medição: relatórios (SE) e sistemas externos (AIE). Cada relatório filtra o perfil na config. */}
+      <Route path="/relatorios" element={P(EQUIPE_RELATORIOS, <Reports />)} />
+      <Route path="/relatorios/:tipo" element={P(EQUIPE_RELATORIOS, <RelatorioView />)} />
+      <Route path="/admin/integracoes" element={P(['admin'], <ExternalSystems />)} />
 
       {/* Gestor – Patrícia (Empresa Corporativa) */}
       <Route path="/gestor/painel" element={P(['gestor'], <ManagerPanel />, 'approvalRequired')} />

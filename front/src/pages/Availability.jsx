@@ -7,7 +7,8 @@
  *  Mostra os períodos já ocupados do equipamento e bloqueia o botão se houver conflito
  *  (o backend confere de novo no POST, a checagem aqui é só para ajudar o usuário). RN03.
  *  Quem chama: App.jsx, rota /equipamento/:id/disponibilidade (botão "Ver disponibilidade" do EquipmentDetails).
- *  Chama: GET /api/equipamentos/{id}, GET /api/equipamentos/{id}/ocupacao;
+ *  Chama: GET /api/equipamentos/{id}, GET /api/equipamentos/{id}/ocupacao,
+ *         GET /api/integracoes/feriados (AIE "Calendário de feriados", Laura - Medição);
  *         navega para /equipamento/:id/confirmar (ConfirmReservation) levando as datas no "state".
  * ============================================================
  */
@@ -33,6 +34,10 @@ export default function Availability() {
   //   -> SELECT ... FROM reserva t WHERE t.tenant_id = ? AND t.ativo = TRUE AND (t.equipamento_id = ?
   //      AND t.status IN ('AGUARDANDO_APROVACAO', 'AGENDADA', 'EM_USO'))
   const ocupacao = useApi(`/equipamentos/${id}/ocupacao`);
+  // Medição (AIE "Calendário de feriados", Laura): feriados/recessos dos próximos 120 dias vindos do
+  // Calendário Acadêmico (sistema externo, só leitura): GET /api/integracoes/feriados?inicio=..&fim=..
+  // Em feriado o laboratório está fechado: não dá para retirar nem devolver (o backend confere de novo).
+  const feriados = useApi(`/integracoes/feriados?inicio=${isoDate(0)}&fim=${isoDate(120)}`);
 
   // Estado das datas escolhidas (formato AAAA-MM-DD do <input type="date">).
   // Valor inicial: amanhã até daqui a 3 dias.
@@ -51,6 +56,12 @@ export default function Availability() {
   const ocupados = ocupacao.dados || [];
   const conflito = ocupados.find((r) => !(r.dataFim < startDate || r.dataInicio > endDate));
   const periodoInvalido = !startDate || !endDate || endDate < startDate;
+  // Feriados: os que caem dentro do período escolhido e os que batem com a retirada/devolução.
+  const listaFeriados = feriados.dados || [];
+  const feriadosNoPeriodo = listaFeriados.filter((f) => f.data >= startDate && f.data <= endDate);
+  const feriadoNaRetirada = listaFeriados.find((f) => f.data === startDate);
+  const feriadoNaDevolucao = listaFeriados.find((f) => f.data === endDate);
+  const bloqueadoPorFeriado = Boolean(feriadoNaRetirada || feriadoNaDevolucao);
 
   // JSX: formulário de datas, lista de datas ocupadas e resumo. O botão "Continuar" fica
   // desabilitado se houver conflito ou período inválido; ao clicar, navigate leva as datas
@@ -98,6 +109,23 @@ export default function Availability() {
               </ul>
             )}
           </div>
+          {/* Feriados do Calendário Acadêmico (AIE) que caem no período escolhido */}
+          <div className="info-panel" style={{ marginTop: 16 }} data-testid="painel-feriados">
+            <strong>Feriados e recessos no período</strong> <span className="aie-tag">Calendário Acadêmico</span>
+            {feriadosNoPeriodo.length === 0 ? (
+              <p style={{ marginTop: 6 }}>Nenhum feriado entre as datas escolhidas.</p>
+            ) : (
+              <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+                {feriadosNoPeriodo.map((f) => <li key={f.data}>{formatDateBR(f.data)} – {f.descricao} ({f.tipo})</li>)}
+              </ul>
+            )}
+          </div>
+          {feriadoNaRetirada && (
+            <ErrorState mensagem={`A retirada cai em ${formatDateBR(feriadoNaRetirada.data)} (${feriadoNaRetirada.descricao}): o laboratório estará fechado.`} />
+          )}
+          {feriadoNaDevolucao && (
+            <ErrorState mensagem={`A devolução cai em ${formatDateBR(feriadoNaDevolucao.data)} (${feriadoNaDevolucao.descricao}): o laboratório estará fechado.`} />
+          )}
           {conflito && (
             <ErrorState mensagem={`Conflito: o equipamento já está reservado de ${formatDateBR(conflito.dataInicio)} a ${formatDateBR(conflito.dataFim)}.`} />
           )}
@@ -113,7 +141,7 @@ export default function Availability() {
               <span className="summary-value"><MapPin size={13} style={{ marginRight: 4, verticalAlign: 'middle' }} />{equipamento.localNome}</span>
             </div>
           </div>
-          <button type="button" className="btn btn-primary btn-block" disabled={Boolean(conflito) || periodoInvalido}
+          <button type="button" className="btn btn-primary btn-block" disabled={Boolean(conflito) || periodoInvalido || bloqueadoPorFeriado}
             onClick={() => navigate(`/equipamento/${id}/confirmar`, { state: { startDate, endDate } })}>
             Continuar
           </button>

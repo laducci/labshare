@@ -198,3 +198,15 @@ CREATE TABLE IF NOT EXISTS historico (
     usuario_id   INTEGER REFERENCES usuario(id),
     data_hora    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================
+--  MEDIÇÃO (pontos de função): referências a ARQUIVOS DE INTERFACE EXTERNA (AIE)
+--  Estas colunas guardam só a CHAVE de um registro que pertence a outro sistema
+--  da instituição (patrimônio, ensalamento, acadêmico/RH, compras).
+--  O LabShare apenas LÊ esses sistemas: não cria, não altera e não apaga nada lá.
+--  ADD COLUMN IF NOT EXISTS permite rodar de novo num banco que já existia.
+-- ============================================================
+ALTER TABLE categoria  ADD COLUMN IF NOT EXISTS grupo_patrimonial VARCHAR(20);
+ALTER TABLE local      ADD COLUMN IF NOT EXISTS codigo_sala       VARCHAR(20);
+ALTER TABLE usuario    ADD COLUMN IF NOT EXISTS matricula         VARCHAR(30);
+ALTER TABLE manutencao ADD COLUMN IF NOT EXISTS fornecedor_cnpj   VARCHAR(20);

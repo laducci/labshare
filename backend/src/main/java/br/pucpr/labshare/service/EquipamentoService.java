@@ -20,6 +20,7 @@ import br.pucpr.labshare.dao.ReservaDao;
 import br.pucpr.labshare.model.Equipamento;
 import br.pucpr.labshare.model.Reserva;
 import br.pucpr.labshare.model.StatusEquipamento;
+import br.pucpr.labshare.integracao.SistemaPatrimonioBens;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,8 +34,13 @@ public class EquipamentoService extends CrudService<Equipamento> {
     private final ReservaDao reservaDao;
 
     // Injeção pelo construtor: o dao também vai para o CrudService (super) fazer o CRUD genérico.
-    public EquipamentoService(EquipamentoDao dao, ReservaDao reservaDao, HistoricoService historico, TenantService tenants) {
+    // AIE "Bens patrimoniais": só leitura, impede cadastrar um bem já baixado.
+    private final SistemaPatrimonioBens patrimonio;
+
+    public EquipamentoService(EquipamentoDao dao, ReservaDao reservaDao, HistoricoService historico, TenantService tenants,
+                              SistemaPatrimonioBens patrimonio) {
         super(dao, historico, tenants);
+        this.patrimonio = patrimonio;
         this.equipamentoDao = dao;
         this.reservaDao = reservaDao;
     }
@@ -50,6 +56,9 @@ public class EquipamentoService extends CrudService<Equipamento> {
     protected void validar(Equipamento e, Contexto ctx) {
         obrigatorio(e.getNome(), "Nome");
         obrigatorio(e.getCategoriaId(), "Categoria");
+        // Medição (AIE): bem BAIXADO no Sistema de Patrimônio não pode virar equipamento emprestável.
+        patrimonio.buscar(ctx.tenantId(), e.getPatrimonio()).ifPresent(bem ->
+                exigir(!bem.estaBaixado(), "O patrimônio " + bem.numero() + " está BAIXADO no Sistema de Patrimônio."));
     }
 
     /**

@@ -7,7 +7,8 @@
  *  (equipamento volta a "Disponível", RN10) ou cancelar (DELETE lógico, ocorrência volta à fila).
  *  Quem chama: App.jsx, rota /manutencao/:id (MaintenancePanel: "Iniciar manutenção" e "Continuar").
  *  Chama: GET /api/manutencoes/{id}, GET /api/usuarios?perfil=manutencao, PUT /api/manutencoes/{id},
- *         POST /api/manutencoes/{id}/concluir, DELETE /api/manutencoes/{id}.
+ *         POST /api/manutencoes/{id}/concluir, DELETE /api/manutencoes/{id},
+ *         GET /api/integracoes/fornecedores (AIE "Fornecedor de assistência técnica", Camilla - Medição).
  * ============================================================
  */
 import { useEffect, useState } from 'react';
@@ -32,6 +33,9 @@ export default function EquipmentMaintenance() {
   // Opções do campo "Responsável": GET /api/usuarios?perfil=manutencao -> UsuarioController.porPerfil
   //   -> UsuarioService.listarPorPerfil -> SELECT t.* FROM usuario t WHERE t.tenant_id = ? AND t.ativo = TRUE AND (t.perfil = ?)
   const responsaveis = useApi('/usuarios?perfil=manutencao');
+  // Medição (AIE): empresas de assistência técnica do Sistema de Compras (só leitura).
+  // GET /api/integracoes/fornecedores -> SistemaCompras.listar. Só fornecedor com contrato vigente é aceito.
+  const fornecedores = useApi('/integracoes/fornecedores');
   // Estado: form = cópia editável da manutenção; mensagem de sucesso; erro da ação.
   const [form, setForm] = useState(null);
   const [mensagem, setMensagem] = useState(null);
@@ -43,6 +47,7 @@ export default function EquipmentMaintenance() {
       descricaoReparo: m.descricaoReparo || '',
       pecasSubstituidas: m.pecasSubstituidas || '',
       responsavelId: m.responsavelId || '',
+      fornecedorCnpj: m.fornecedorCnpj || '',
       status: m.status === 'Concluída' ? 'Em manutenção' : m.status,
     });
   }, [m]);
@@ -50,7 +55,12 @@ export default function EquipmentMaintenance() {
   if (carregando || !form) return <Layout>{erro ? <ErrorState mensagem={erro} /> : <LoadingState />}</Layout>;
 
   // corpo(): monta o JSON enviado (responsavelId como número). atualizar(campo): handler genérico dos inputs.
-  const corpo = () => ({ ...form, responsavelId: form.responsavelId ? Number(form.responsavelId) : null });
+  const corpo = () => ({
+    ...form,
+    responsavelId: form.responsavelId ? Number(form.responsavelId) : null,
+    fornecedorCnpj: form.fornecedorCnpj || null, // vazio = reparo interno
+  });
+  const fornecedorEscolhido = (fornecedores.dados || []).find((f) => f.cnpj === form.fornecedorCnpj);
   const atualizar = (campo) => (e) => setForm({ ...form, [campo]: e.target.value });
 
   /** Executa uma ação da API limpando mensagens antes e mostrando o erro do backend se falhar. */
@@ -159,6 +169,24 @@ export default function EquipmentMaintenance() {
                 <option>Aguardando peça</option>
               </select>
             </div>
+          </div>
+
+          {/* Assistência técnica externa (AIE do Sistema de Compras). Vazio = reparo feito pela equipe interna. */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="fornecedor">Assistência técnica externa <span className="aie-tag">Sistema de Compras</span></label>
+            <select id="fornecedor" className="form-select" value={form.fornecedorCnpj} onChange={atualizar('fornecedorCnpj')} disabled={concluida}>
+              <option value="">Reparo interno (sem fornecedor)</option>
+              {(fornecedores.dados || []).map((f) => (
+                <option key={f.cnpj} value={f.cnpj}>
+                  {f.nomeFantasia} – {f.especialidade}{f.contratoVigente ? '' : ' (contrato encerrado)'}
+                </option>
+              ))}
+            </select>
+            {fornecedorEscolhido && (
+              <span className="form-hint">
+                CNPJ {fornecedorEscolhido.cnpj} · {fornecedorEscolhido.telefone} · {fornecedorEscolhido.email}
+              </span>
+            )}
           </div>
 
           {!concluida && (
