@@ -48,6 +48,8 @@ import TenantSettings from './pages/TenantSettings';
 import Dashboard from './pages/Dashboard';
 import Reports from './pages/Reports';
 import RelatorioView from './pages/RelatorioView';
+import Consultas from './pages/Consultas';
+import ConsultaView from './pages/ConsultaView';
 import ExternalSystems from './pages/ExternalSystems';
 
 // Perfis que podem abrir as telas de manutenção.
@@ -133,6 +135,8 @@ function App() {
       {/* Medição: relatórios (SE) e sistemas externos (AIE). Cada relatório filtra o perfil na config. */}
       <Route path="/relatorios" element={P(EQUIPE_RELATORIOS, <Reports />)} />
       <Route path="/relatorios/:tipo" element={P(EQUIPE_RELATORIOS, <RelatorioView />)} />
+      <Route path="/consultas" element={P(['admin'], <Consultas />)} />
+      <Route path="/consultas/:tipo" element={P(['admin'], <ConsultaView />)} />
       <Route path="/admin/integracoes" element={P(['admin'], <ExternalSystems />)} />
 
       {/* Gestor – Patrícia (Empresa Corporativa) */}

@@ -41,8 +41,8 @@ export default function RegisterPickup() {
     if (equipamento.dados) setItens(criarItens(equipamento.dados.itensParaConferir, false));
   }, [equipamento.dados]);
 
-  if (reserva.carregando || equipamento.carregando) return <Layout><LoadingState /></Layout>;
-  if (reserva.erro) return <Layout><ErrorState mensagem={reserva.erro} /></Layout>;
+  if (reserva.carregando || equipamento.carregando) return <Layout estreito><LoadingState /></Layout>;
+  if (reserva.erro) return <Layout estreito><ErrorState mensagem={reserva.erro} /></Layout>;
   // Atalho para a reserva carregada.
   const r = reserva.dados;
 
@@ -72,13 +72,13 @@ export default function RegisterPickup() {
   // JSX: resumo da reserva, componente Checklist (modo "retirada") e campo de observações.
   // onChange={setItens} faz o Checklist atualizar o estado desta tela quando um item é marcado.
   return (
-    <Layout>
+    <Layout estreito>
       <div className="page-header">
         <h1 className="page-title">Registrar retirada</h1>
         <p className="page-subtitle">Confira os dados e valide todos os itens entregues.</p>
       </div>
 
-      <div className="card" style={{ maxWidth: '720px' }}>
+      <div className="card">
         <ErrorState mensagem={erro} />
         <div className="summary-box">
           <div className="summary-row"><span className="summary-label">Equipamento</span><span className="summary-value">{r.equipamentoNome}</span></div>

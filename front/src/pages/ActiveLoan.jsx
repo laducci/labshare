@@ -37,8 +37,8 @@ export default function ActiveLoan() {
   const [mensagem, setMensagem] = useState(null);
 
   // Enquanto o GET não termina mostra "carregando"; se deu erro, mostra a mensagem do backend.
-  if (carregando) return <Layout><LoadingState /></Layout>;
-  if (erro) return <Layout><ErrorState mensagem={erro} /></Layout>;
+  if (carregando) return <Layout estreito><LoadingState /></Layout>;
+  if (erro) return <Layout estreito><ErrorState mensagem={erro} /></Layout>;
 
   /**
    * Botão "Enviar lembretes de devolução" (RN12):
@@ -59,11 +59,11 @@ export default function ActiveLoan() {
   // JSX da tela: resumo do empréstimo + botões. "Registrar devolução" navega para
   // /tecnico/devolucao/:reservaId (tela RegisterReturn).
   return (
-    <Layout>
+    <Layout estreito>
       <div className="alert alert-success">Retirada registrada com sucesso.</div>
       <SuccessMessage mensagem={mensagem} />
 
-      <div className="card" style={{ maxWidth: '520px' }}>
+      <div className="card">
         <div className="reservation-card__equipment">{r.equipamentoNome}</div>
         <div style={{ margin: '1rem 0' }}>
           <span className="badge badge-warning">Em uso por {r.usuarioNome?.split(' ')[0]}</span>

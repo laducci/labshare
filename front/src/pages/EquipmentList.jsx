@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import Layout from '../components/Layout';
+import FotoEquipamento from '../components/FotoEquipamento';
 import EquipmentCard from '../components/EquipmentCard';
 import StatusBadge from '../components/StatusBadge';
 import { EmptyState, ErrorState, LoadingState, SuccessMessage } from '../components/States';
@@ -102,11 +103,11 @@ export default function EquipmentList() {
 
       <div className="filters-bar">
         <div className="form-group search-filter">
-          <label className="form-label">Busca</label>
+          <label className="form-label">Buscar</label>
           <div className="form-input-wrapper">
+            <Search size={17} />
             <input type="search" className="form-input" placeholder="Nome ou patrimônio..." value={search}
-              onChange={(e) => setSearch(e.target.value)} style={{ paddingLeft: '40px' }} />
-            <Search size={18} style={{ position: 'absolute', left: 13, top: 14, color: 'var(--color-text-muted)' }} />
+              onChange={(e) => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           </div>
         </div>
         <div className="form-group">
@@ -141,17 +142,17 @@ export default function EquipmentList() {
           <div className="table-wrap">
             <table className="data-table">
               <thead>
-                <tr><th>Equipamento</th><th>Patrimônio</th><th>Categoria</th><th>Local</th><th>Status</th><th>Ações</th></tr>
+                <tr><th>Equipamento</th><th>Patrimônio</th><th>Categoria</th><th>Local</th><th>Status</th><th className="col-acoes">Ações</th></tr>
               </thead>
               <tbody>
                 {filtrados.map((eq) => (
                   <tr key={eq.id}>
-                    <td><div className="table-equipment">{eq.imagemUrl && <img src={eq.imagemUrl} alt="" />}{eq.nome}</div></td>
+                    <td><div className="table-equipment"><FotoEquipamento src={eq.imagemUrl} alt="" className="table-thumb" tamanhoIcone={16} />{eq.nome}</div></td>
                     <td>{eq.patrimonio || '—'}</td>
                     <td>{eq.categoriaNome}</td>
                     <td>{eq.localNome || '—'}</td>
                     <td><StatusBadge status={eq.status} /></td>
-                    <td>
+                    <td className="col-acoes">
                       <div className="table-actions">
                         <button type="button" className="btn btn-link btn-sm" onClick={() => navigate(`/equipamento/${eq.id}`)}>Ver</button>
                         <button type="button" className="btn btn-link btn-sm" onClick={() => navigate(`/equipamentos/${eq.id}/editar`)}>Editar</button>

@@ -40,7 +40,7 @@ export default function Notifications() {
 
   // JSX: um card por notificação; as não lidas ganham destaque e o botão "Marcar como lida".
   return (
-    <Layout>
+    <Layout estreito>
       <h1 className="page-title">Notificações</h1>
       <p className="page-subtitle">Lembretes de devolução, aprovações e avisos de manutenção.</p>
 
@@ -48,7 +48,7 @@ export default function Notifications() {
       <ErrorState mensagem={erro} />
       {!carregando && (dados || []).length === 0 && <EmptyState>Você não tem notificações.</EmptyState>}
 
-      <div style={{ display: 'grid', gap: 12, maxWidth: 720 }}>
+      <div style={{ display: 'grid', gap: 12 }}>
         {(dados || []).map((n) => (
           <div key={n.id} className={`card notification-item ${n.lida ? '' : 'notification-item--unread'}`}>
             <div>

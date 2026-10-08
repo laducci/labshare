@@ -44,8 +44,8 @@ export default function RegisterReturn() {
     if (equipamento.dados) setItens(criarItens(equipamento.dados.itensParaConferir, true));
   }, [equipamento.dados]);
 
-  if (reserva.carregando || equipamento.carregando) return <Layout><LoadingState /></Layout>;
-  if (reserva.erro) return <Layout><ErrorState mensagem={reserva.erro} /></Layout>;
+  if (reserva.carregando || equipamento.carregando) return <Layout estreito><LoadingState /></Layout>;
+  if (reserva.erro) return <Layout estreito><ErrorState mensagem={reserva.erro} /></Layout>;
   const r = reserva.dados;
   // Se algum item está com defeito a tela muda: aparece prioridade e o botão vira "abrir ocorrência".
   const temDefeito = itens.some((i) => !i.ok);
@@ -82,7 +82,7 @@ export default function RegisterReturn() {
   // Depois de uma devolução sem defeito, a tela troca para a mensagem de sucesso (e da multa, se houver).
   if (resultado) {
     return (
-      <Layout>
+      <Layout estreito>
         <div className="alert alert-success">{resultado.mensagem}</div>
         {resultado.multa && (
           <div className="alert alert-info">
@@ -96,13 +96,13 @@ export default function RegisterReturn() {
 
   // JSX principal: resumo, Checklist no modo "devolucao", data, prioridade (só com defeito) e observações.
   return (
-    <Layout>
+    <Layout estreito>
       <div className="page-header">
         <h1 className="page-title">Registrar devolução</h1>
         <p className="page-subtitle">Inspeção: confira o estado de cada item recebido.</p>
       </div>
 
-      <div className="card" style={{ maxWidth: '720px' }}>
+      <div className="card">
         <ErrorState mensagem={erro} />
         <div className="summary-box">
           <div className="summary-row"><span className="summary-label">Equipamento</span><span className="summary-value">{r.equipamentoNome}</span></div>

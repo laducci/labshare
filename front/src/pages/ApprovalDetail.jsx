@@ -30,8 +30,8 @@ export default function ApprovalDetail() {
   const [motivo, setMotivo] = useState('');
   const [erroAcao, setErroAcao] = useState(null);
 
-  if (carregando) return <Layout><LoadingState /></Layout>;
-  if (erro) return <Layout><ErrorState mensagem={erro} /></Layout>;
+  if (carregando) return <Layout estreito><LoadingState /></Layout>;
+  if (erro) return <Layout estreito><ErrorState mensagem={erro} /></Layout>;
 
   /**
    * Botões "Aprovar retirada" / "Rejeitar" (acao = 'aprovar' ou 'rejeitar'):
@@ -59,11 +59,11 @@ export default function ApprovalDetail() {
 
   // JSX: resumo da solicitação + justificativa; botões de decisão ou o resultado da decisão.
   return (
-    <Layout>
+    <Layout estreito>
       <h1 className="page-title">Aprovação de retirada</h1>
       <ErrorState mensagem={erroAcao} />
 
-      <div className="card" style={{ maxWidth: '560px' }}>
+      <div className="card">
         <div className="summary-box">
           <div className="summary-row"><span className="summary-label">Equipamento</span><span className="summary-value">{r.equipamentoNome}</span></div>
           <div className="summary-row"><span className="summary-label">Solicitante</span><span className="summary-value">{r.usuarioNome}</span></div>

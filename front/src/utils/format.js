@@ -59,6 +59,17 @@ export const PERFIS = {
   admin: 'Administrador',
 };
 
+/**
+ * Nome do perfil que aparece na tela, levando em conta o cliente (VARIABILIDADE).
+ * Em clientes corporativos quem pede equipamento é funcionário, então o perfil "aluno"
+ * aparece como "Colaborador". O banco continua guardando "aluno": só o texto muda.
+ * Ex.: rotuloPerfil('aluno', { segmento: 'Corporativo' }) -> 'Colaborador'.
+ */
+export function rotuloPerfil(perfil, tenant) {
+  if (perfil === 'aluno' && tenant?.segmento === 'Corporativo') return 'Colaborador';
+  return PERFIS[perfil] || perfil;
+}
+
 /** Tela inicial de cada perfil depois do login. */
 // Usada no login (App.jsx) e pelo ProtectedRoute quando o usuário tenta abrir uma tela sem permissão (RNF05).
 export function rotaInicial(perfil) {

@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import FotoEquipamento from '../components/FotoEquipamento';
 import StatusBadge from '../components/StatusBadge';
 import { EmptyState, ErrorState, LoadingState } from '../components/States';
 import { useApp } from '../context/AppContext';
@@ -84,16 +85,16 @@ export default function MaintenancePanel() {
         {aguardando.length > 0 && (
           <div className="table-wrap">
             <table className="data-table">
-              <thead><tr><th>Equipamento</th><th>Problema</th><th>Data</th><th>Prioridade</th><th>Status</th><th>Ação</th></tr></thead>
+              <thead><tr><th>Equipamento</th><th>Problema</th><th>Data</th><th>Prioridade</th><th>Status</th><th className="col-acoes">Ação</th></tr></thead>
               <tbody>
                 {aguardando.map((o) => (
                   <tr key={o.id}>
-                    <td><div className="table-equipment">{o.equipamentoImagem && <img src={o.equipamentoImagem} alt="" />}{o.equipamentoNome}</div></td>
+                    <td><div className="table-equipment"><FotoEquipamento src={o.equipamentoImagem} alt="" className="table-thumb" tamanhoIcone={16} />{o.equipamentoNome}</div></td>
                     <td>{o.descricao}</td>
                     <td>{formatDateBR(o.dataAbertura)}</td>
                     <td><StatusBadge status={o.prioridade} /></td>
                     <td><StatusBadge status={o.status} /></td>
-                    <td><button type="button" className="btn btn-primary btn-sm" onClick={() => iniciar(o)}>Iniciar manutenção</button></td>
+                    <td className="col-acoes"><button type="button" className="btn btn-primary btn-sm" onClick={() => iniciar(o)}>Iniciar manutenção</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -108,16 +109,16 @@ export default function MaintenancePanel() {
         {andamento.length > 0 && (
           <div className="table-wrap">
             <table className="data-table">
-              <thead><tr><th>Equipamento</th><th>Problema</th><th>Início</th><th>Responsável</th><th>Status</th><th>Ação</th></tr></thead>
+              <thead><tr><th>Equipamento</th><th>Problema</th><th>Início</th><th>Responsável</th><th>Status</th><th className="col-acoes">Ação</th></tr></thead>
               <tbody>
                 {andamento.map((m) => (
                   <tr key={m.id}>
-                    <td><div className="table-equipment">{m.equipamentoImagem && <img src={m.equipamentoImagem} alt="" />}{m.equipamentoNome}</div></td>
+                    <td><div className="table-equipment"><FotoEquipamento src={m.equipamentoImagem} alt="" className="table-thumb" tamanhoIcone={16} />{m.equipamentoNome}</div></td>
                     <td>{m.ocorrenciaDescricao}</td>
                     <td>{formatDateBR(m.dataInicio)}</td>
                     <td>{m.responsavelNome || '—'}</td>
                     <td><StatusBadge status={m.status} /></td>
-                    <td><button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate(`/manutencao/${m.id}`)}>Continuar</button></td>
+                    <td className="col-acoes"><button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate(`/manutencao/${m.id}`)}>Continuar</button></td>
                   </tr>
                 ))}
               </tbody>

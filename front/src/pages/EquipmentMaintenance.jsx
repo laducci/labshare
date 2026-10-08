@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
+import FotoEquipamento from '../components/FotoEquipamento';
 import StatusBadge from '../components/StatusBadge';
 import { ErrorState, LoadingState, SuccessMessage } from '../components/States';
 import { useApi } from '../hooks/useApi';
@@ -128,7 +129,7 @@ export default function EquipmentMaintenance() {
 
       <div className="maintenance-layout">
         <aside className="card">
-          {m.equipamentoImagem && <img src={m.equipamentoImagem} alt={m.equipamentoNome} className="detail-image" />}
+          <FotoEquipamento src={m.equipamentoImagem} alt={m.equipamentoNome} className="detail-image" />
           <h2 className="section-title" style={{ marginTop: '20px' }}>{m.equipamentoNome}</h2>
           <div className="summary-box" style={{ marginTop: '16px' }}>
             <div className="summary-row"><span className="summary-label">Patrimônio</span><span className="summary-value">{m.equipamentoPatrimonio || '—'}</span></div>

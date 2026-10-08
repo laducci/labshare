@@ -25,15 +25,15 @@ export default function ReservationSuccess() {
   //   -> SELECT t.*, e.nome AS equipamento_nome, l.nome AS local_nome, ... FROM reserva t ... WHERE t.id = ? AND t.tenant_id = ?
   const { dados: reserva, carregando, erro } = useApi(`/reservas/${id}`);
 
-  if (carregando) return <Layout><LoadingState /></Layout>;
-  if (erro) return <Layout><ErrorState mensagem={erro} /></Layout>;
+  if (carregando) return <Layout estreito><LoadingState /></Layout>;
+  if (erro) return <Layout estreito><ErrorState mensagem={erro} /></Layout>;
 
   // Cliente com aprovação de gestor (AprovacaoPeloGestor) cria a reserva como "Aguardando aprovação";
   // os demais (AprovacaoAutomatica) já criam como "Agendada". A mensagem muda conforme o caso.
   const pendente = reserva.status === 'Aguardando aprovação';
 
   return (
-    <Layout>
+    <Layout estreito>
       <div className={`alert ${pendente ? 'alert-info' : 'alert-success'}`}>
         {pendente ? 'Solicitação enviada! Aguarde a aprovação do gestor.' : 'Reserva realizada com sucesso!'}
       </div>

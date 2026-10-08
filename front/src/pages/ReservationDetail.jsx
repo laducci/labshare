@@ -39,8 +39,8 @@ export default function ReservationDetail() {
     if (reserva) setDatas({ dataInicio: reserva.dataInicio, dataFim: reserva.dataFim });
   }, [reserva]);
 
-  if (carregando) return <Layout><LoadingState /></Layout>;
-  if (erro) return <Layout><ErrorState mensagem={erro} /></Layout>;
+  if (carregando) return <Layout estreito><LoadingState /></Layout>;
+  if (erro) return <Layout estreito><ErrorState mensagem={erro} /></Layout>;
 
   // Só dá para editar/cancelar antes da retirada (mesma regra do ReservaService.antesDeSalvar e Reserva.cancelar).
   const editavel = ['Agendada', 'Aguardando aprovação'].includes(reserva.status);
@@ -85,12 +85,12 @@ export default function ReservationDetail() {
 
   // JSX: resumo da reserva; o bloco "Alterar datas" só aparece quando editavel é true.
   return (
-    <Layout>
+    <Layout estreito>
       <h1 className="page-title">Detalhes da reserva</h1>
       <SuccessMessage mensagem={mensagem} />
       <ErrorState mensagem={erroAcao} />
 
-      <div className="card" style={{ maxWidth: '560px' }}>
+      <div className="card">
         <div className="summary-box">
           <div className="summary-row"><span className="summary-label">Equipamento</span><span className="summary-value">{reserva.equipamentoNome}</span></div>
           <div className="summary-row"><span className="summary-label">Local de retirada</span><span className="summary-value">{reserva.localNome}</span></div>

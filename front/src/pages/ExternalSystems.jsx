@@ -69,12 +69,13 @@ export default function ExternalSystems() {
       </div>
 
       {/* Abas: um botão por AIE, com a quantidade de registros */}
-      <div className="filters-bar" style={{ flexWrap: 'wrap', gap: 8 }}>
+      <div className="tabs" role="tablist">
         {Object.entries(AIES).map(([k, a]) => {
           const qtd = (resumo.dados || []).find((s) => s.chave === k)?.registros;
           return (
-            <button key={k} type="button" className={`btn btn-sm ${k === chave ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChave(k)}>
-              {a.titulo}{qtd !== undefined ? ` (${qtd})` : ''}
+            <button key={k} type="button" role="tab" aria-selected={k === chave}
+              className={`tab ${k === chave ? 'active' : ''}`} onClick={() => setChave(k)}>
+              {a.titulo}{qtd !== undefined && <span className="tab__count">{qtd}</span>}
             </button>
           );
         })}

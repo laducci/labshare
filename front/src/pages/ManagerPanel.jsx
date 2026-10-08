@@ -38,9 +38,8 @@ export default function ManagerPanel() {
       <p className="page-subtitle">{user.nome} · {tenant.nome}</p>
 
       <div className="info-panel" style={{ marginBottom: '1.5rem' }}>
-        <strong>Recurso exclusivo deste cliente:</strong> toda retirada de equipamento passa por aprovação do
-        gestor responsável pelo centro de custo antes de ser liberada ao técnico. Na Universidade e na Escola
-        Técnica esta etapa não existe (estratégia AprovacaoAutomatica).
+        <strong>Recurso exclusivo deste cliente:</strong> toda reserva passa pela sua aprovação antes de ser
+        liberada para retirada. Clique numa solicitação para aprovar ou rejeitar.
       </div>
 
       <h2 className="section-title">Solicitações aguardando aprovação ({pendentes.length})</h2>

@@ -13,6 +13,7 @@
  */
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
+import FotoEquipamento from '../components/FotoEquipamento';
 import StatusBadge from '../components/StatusBadge';
 import { ErrorState, LoadingState } from '../components/States';
 import { useApp } from '../context/AppContext';
@@ -60,7 +61,7 @@ export default function EquipmentDetails() {
 
       <div className="detail-layout">
         <div>
-          {equipamento.imagemUrl && <img src={equipamento.imagemUrl} alt={equipamento.nome} className="detail-image" />}
+          <FotoEquipamento src={equipamento.imagemUrl} alt={equipamento.nome} className="detail-image" />
         </div>
         <div>
           <StatusBadge status={equipamento.status} />

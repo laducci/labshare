@@ -110,7 +110,7 @@ export default function TechnicianPanel({ filtro = 'todos' }) {
           <div className="table-wrap">
             <table className="data-table">
               <thead>
-                <tr><th>Usuário</th><th>Equipamento</th><th>Período</th><th>Status</th><th>Ação</th></tr>
+                <tr><th>Usuário</th><th>Equipamento</th><th>Período</th><th>Status</th><th className="col-acoes">Ação</th></tr>
               </thead>
               <tbody>
                 {lista.map((r) => (
@@ -122,7 +122,7 @@ export default function TechnicianPanel({ filtro = 'todos' }) {
                       {r.status === 'Em uso' && r.dataFim < hoje && <span className="badge badge-error" style={{ marginLeft: 6 }}>Atrasada</span>}
                     </td>
                     <td><StatusBadge status={r.status} /></td>
-                    <td>
+                    <td className="col-acoes">
                       {r.status === 'Agendada' ? (
                         <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate(`/tecnico/retirada/${r.id}`)}>
                           Registrar retirada

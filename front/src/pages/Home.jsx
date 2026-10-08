@@ -39,7 +39,7 @@ export default function Home() {
   const reservas = useApi('/reservas/minhas');     // GET /api/reservas/minhas
 
   // No front: pega até 3 equipamentos "Disponível" e a primeira reserva ainda ativa do usuário.
-  const disponiveis = (equipamentos.dados || []).filter((e) => e.status === 'Disponível').slice(0, 3);
+  const disponiveis = (equipamentos.dados || []).filter((e) => e.status === 'Disponível').slice(0, 4);
   const proxima = (reservas.dados || []).find((r) => ['Em uso', 'Agendada', 'Aguardando aprovação'].includes(r.status));
 
   /**
@@ -96,7 +96,7 @@ export default function Home() {
         <section className="content-section">
           <div className="section-header"><h2 className="section-title">Sua próxima reserva</h2></div>
           <div className="card compact-loan">
-            {proxima.equipamentoImagem && <img src={proxima.equipamentoImagem} alt={proxima.equipamentoNome} className="compact-loan__image" />}
+            {proxima.equipamentoImagem && <img src={proxima.equipamentoImagem} onError={(e) => { e.currentTarget.style.display = "none"; }} alt={proxima.equipamentoNome} className="compact-loan__image" />}
             <div>
               <div className="reservation-card__equipment">{proxima.equipamentoNome}</div>
               <div className="reservation-card__dates">

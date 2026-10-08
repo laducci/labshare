@@ -29,12 +29,12 @@ export default function Occurrence() {
   //      JOIN equipamento e ON e.id = t.equipamento_id WHERE t.id = ? AND t.tenant_id = ?
   const { dados: o, carregando, erro } = useApi(`/ocorrencias/${id}`);
 
-  if (carregando) return <Layout><LoadingState /></Layout>;
-  if (erro) return <Layout><ErrorState mensagem={erro} /></Layout>;
+  if (carregando) return <Layout estreito><LoadingState /></Layout>;
+  if (erro) return <Layout estreito><ErrorState mensagem={erro} /></Layout>;
 
   // JSX: aviso de multa (se veio no state) e resumo da ocorrência com prioridade e status.
   return (
-    <Layout>
+    <Layout estreito>
       <h1 className="page-title">Ocorrência registrada</h1>
       {state?.multa && (
         <div className="alert alert-info">
@@ -42,7 +42,7 @@ export default function Occurrence() {
         </div>
       )}
 
-      <div className="card" style={{ maxWidth: '560px' }}>
+      <div className="card">
         <div className="summary-box">
           <div className="summary-row"><span className="summary-label">Equipamento</span><span className="summary-value">{o.equipamentoNome}</span></div>
           <div className="summary-row"><span className="summary-label">Problema</span><span className="summary-value">{o.descricao}</span></div>

@@ -55,7 +55,7 @@ export default function ConfirmReservation() {
   // <Navigate> redireciona de volta para a escolha do período (RN03 exige as duas datas).
   const { startDate, endDate } = location.state || {};
   if (!startDate) return <Navigate to={`/equipamento/${id}/disponibilidade`} replace />;
-  if (equipamento.carregando || regras.carregando) return <Layout><LoadingState /></Layout>;
+  if (equipamento.carregando || regras.carregando) return <Layout estreito><LoadingState /></Layout>;
 
   /**
    * Clique em "Confirmar reserva" (CREATE do CRUD de Reservas):
@@ -93,10 +93,10 @@ export default function ConfirmReservation() {
   // JSX: resumo + campos condicionais. "exigeCentroCusto &&" e "regras.dados?.exigeAprovacao &&"
   // fazem a tela mudar conforme o cliente, sem if no código para cada instituição.
   return (
-    <Layout>
+    <Layout estreito>
       <h1 className="page-title">Confirmar reserva</h1>
 
-      <div className="card" style={{ maxWidth: '560px' }}>
+      <div className="card">
         <ErrorState mensagem={erro || equipamento.erro || regras.erro} />
         <div className="summary-box">
           <div className="summary-row"><span className="summary-label">Equipamento</span><span className="summary-value">{equipamento.dados?.nome}</span></div>

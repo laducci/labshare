@@ -16,12 +16,46 @@ import { useApp } from '../context/AppContext';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 
-// Chave do recurso (coluna "recurso" da tabela tenant_recurso) -> texto do checkbox.
+// Chave do recurso (coluna "recurso" da tabela tenant_recurso) -> título e explicação na tela.
 const FEATURE_LABELS = {
   approvalRequired: 'Exigir aprovação de gestor antes da retirada',
   costCenter: 'Vincular reservas a centro de custo',
   lateFee: 'Cobrar multa por devolução em atraso',
 };
+const FEATURE_DESC = {
+  approvalRequired: 'Toda reserva fica "Aguardando aprovação" até o gestor aprovar. Libera o perfil Gestor.',
+  costCenter: 'A reserva pede um centro de custo e aparece o cadastro "Centros de custo" no menu.',
+  lateFee: 'A devolução em atraso gera multa por dia e aparece o módulo "Multas" no menu.',
+};
+
+/** Um card de cliente com uma linha por recurso (título, explicação e interruptor). */
+function CardCliente({ cliente, atual, onToggle }) {
+  return (
+    <div className="card">
+      <div className="section-header">
+        <div>
+          <h2 className="section-title">{cliente.nome}</h2>
+          <p className="feature-row__desc">{cliente.segmento}</p>
+        </div>
+        {atual && <span className="badge badge-success">Cliente atual</span>}
+      </div>
+      {Object.entries(FEATURE_LABELS).map(([chave, rotulo]) => {
+        const ligado = Boolean(cliente.features[chave]);
+        return (
+          <div className="feature-row" key={chave}>
+            <div>
+              <p className="feature-row__title">{rotulo}</p>
+              <p className="feature-row__desc">{FEATURE_DESC[chave]}</p>
+            </div>
+            {/* role="switch" + aria-checked: o CSS desenha o interruptor; o leitor de tela entende ligado/desligado. */}
+            <button type="button" role="switch" aria-checked={ligado} aria-label={`${rotulo} (${cliente.nome})`}
+              className="switch" onClick={() => onToggle(cliente, chave)} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /**
  * ============================================================
@@ -67,38 +101,29 @@ export default function TenantSettings() {
     }
   };
 
-  // JSX: um card por cliente com um checkbox para cada recurso.
+  // JSX: primeiro o cliente do administrador logado; depois os outros clientes (para demonstrar
+  // que cada instituição tem a sua configuração, sem duplicar código).
+  const atual = (dados || []).find((c) => c.id === tenant.id);
+  const outros = (dados || []).filter((c) => c.id !== tenant.id);
   return (
     <Layout>
-      <h1 className="page-title">Personalização por cliente</h1>
-      <p className="page-subtitle">
-        Cada instituição que utiliza o LabShare é um cliente (tenant) independente, com seu próprio conjunto
-        de recursos habilitados — sem duplicar código-fonte. As alterações são gravadas no banco.
-      </p>
+      <div className="page-header">
+        <h1 className="page-title">Personalização</h1>
+        <p className="page-subtitle">
+          Ligue ou desligue recursos para cada instituição. O menu, as telas e as regras mudam na hora, sem mexer no código.
+        </p>
+      </div>
       <SuccessMessage mensagem={mensagem} />
       <ErrorState mensagem={erroAcao || erro} />
       {carregando && <LoadingState />}
 
-      <div style={{ display: 'grid', gap: '1.5rem', marginTop: '1.5rem' }}>
-        {(dados || []).map((cliente) => (
-          <div key={cliente.id} className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <h3 className="section-title" style={{ marginBottom: '0.25rem' }}>
-                {cliente.nome} {cliente.id === tenant.id && <small style={{ color: 'var(--color-text-muted)' }}>(você está aqui)</small>}
-              </h3>
-              <span className="badge badge-neutral">{cliente.segmento}</span>
-            </div>
-            <div style={{ display: 'grid', gap: '0.75rem', marginTop: '1rem' }}>
-              {Object.entries(FEATURE_LABELS).map(([chave, rotulo]) => (
-                <label key={chave} className="form-checkbox">
-                  <input type="checkbox" checked={Boolean(cliente.features[chave])} onChange={() => toggleFeature(cliente, chave)} />
-                  {rotulo} <code style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{chave}</code>
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      {atual && <CardCliente cliente={atual} atual onToggle={toggleFeature} />}
+      {outros.length > 0 && (
+        <section className="content-section" style={{ marginTop: 32 }}>
+          <h2 className="section-title">Outros clientes do LabShare</h2>
+          {outros.map((cliente) => <CardCliente key={cliente.id} cliente={cliente} onToggle={toggleFeature} />)}
+        </section>
+      )}
     </Layout>
   );
 }

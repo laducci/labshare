@@ -6,10 +6,11 @@
  *  O que faz: cartão de um equipamento (foto, nome, status, categoria, local e botão "Ver detalhes").
  *  O mesmo cartão é usado em várias telas, recebendo o equipamento por props.
  *  Quem chama: Home, SearchResults, EquipmentList (catálogo).
- *  Chama: StatusBadge; navigate -> /equipamento/:id (EquipmentDetails).
+ *  Chama: StatusBadge, FotoEquipamento; navigate -> /equipamento/:id (EquipmentDetails).
  * ============================================================
  */
 import { MapPin } from 'lucide-react';
+import FotoEquipamento from './FotoEquipamento';
 import { useNavigate } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 
@@ -21,7 +22,8 @@ export default function EquipmentCard({ equipamento }) {
   return (
     <article className="equipment-card">
       <div className="equipment-card__image-wrap">
-        {equipamento.imagemUrl && <img className="equipment-card__image" src={equipamento.imagemUrl} alt={equipamento.nome} />}
+        {/* Foto ou, se não houver, um ícone no lugar (FotoEquipamento). */}
+        <FotoEquipamento src={equipamento.imagemUrl} alt={equipamento.nome} className="equipment-card__image" tamanhoIcone={34} />
       </div>
       <div className="equipment-card__body">
         <div className="equipment-card__top">

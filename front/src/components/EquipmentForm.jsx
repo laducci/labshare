@@ -70,8 +70,8 @@ export default function EquipmentForm({ equipamentoId }) {
   }, [existente.dados]);
 
   // Enquanto não há formulário pronto mostra erro ou "Carregando..." (retornos antecipados).
-  if (existente.erro) return <Layout><ErrorState mensagem={existente.erro} /></Layout>;
-  if (!form) return <Layout><LoadingState /></Layout>;
+  if (existente.erro) return <Layout estreito><ErrorState mensagem={existente.erro} /></Layout>;
+  if (!form) return <Layout estreito><LoadingState /></Layout>;
 
   // update('nome') devolve a função de onChange daquele campo (evita escrever uma função por input).
   // linhas() transforma o texto do textarea em array, ignorando linhas vazias.
@@ -129,13 +129,13 @@ export default function EquipmentForm({ equipamentoId }) {
   // Os <select> de categoria e local são preenchidos com o GET de /categorias e /locais.
   // "Itens do checklist" alimentam o componente Checklist na retirada/devolução (RN05/RN07).
   return (
-    <Layout>
+    <Layout estreito>
       <div className="page-header">
         <h1 className="page-title">{edicao ? 'Editar equipamento' : 'Cadastrar equipamento'}</h1>
         <p className="page-subtitle">{edicao ? form.nome : 'Preencha as informações para adicionar um item ao acervo.'}</p>
       </div>
 
-      <form className="card" style={{ maxWidth: '860px' }} onSubmit={handleSubmit}>
+      <form className="card" onSubmit={handleSubmit}>
         <ErrorState mensagem={erro} />
         <section className="form-section">
           <h2 className="form-section__title">Informações básicas</h2>

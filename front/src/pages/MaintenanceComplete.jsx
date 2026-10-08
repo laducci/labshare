@@ -30,14 +30,14 @@ export default function MaintenanceComplete() {
   //   GET /api/equipamentos/{id} -> EquipamentoController.buscar -> SELECT ... FROM equipamento t ... WHERE t.id = ? AND t.tenant_id = ?
   const equipamento = useApi(manutencao.dados ? `/equipamentos/${manutencao.dados.equipamentoId}` : null);
 
-  if (manutencao.carregando || equipamento.carregando) return <Layout><LoadingState /></Layout>;
-  if (manutencao.erro) return <Layout><ErrorState mensagem={manutencao.erro} /></Layout>;
+  if (manutencao.carregando || equipamento.carregando) return <Layout estreito><LoadingState /></Layout>;
+  if (manutencao.erro) return <Layout estreito><ErrorState mensagem={manutencao.erro} /></Layout>;
 
   // JSX: resumo com o reparo feito e o status atual do equipamento (deve estar "Disponível").
   return (
-    <Layout>
+    <Layout estreito>
       <div className="alert alert-success">Manutenção concluída com sucesso.</div>
-      <div className="card" style={{ maxWidth: '480px' }}>
+      <div className="card">
         <div className="summary-box">
           <div className="summary-row"><span className="summary-label">Equipamento</span><span className="summary-value">{manutencao.dados.equipamentoNome}</span></div>
           <div className="summary-row"><span className="summary-label">Reparo</span><span className="summary-value">{manutencao.dados.descricaoReparo}</span></div>

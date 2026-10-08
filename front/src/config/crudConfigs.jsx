@@ -14,7 +14,7 @@
 import CategoryIcon from '../components/CategoryIcon';
 import StatusBadge from '../components/StatusBadge';
 import { api } from '../services/api';
-import { formatDateBR, formatMoney, PERFIS } from '../utils/format';
+import { formatDateBR, formatMoney, PERFIS, rotuloPerfil } from '../utils/format';
 
 /**
  * ============================================================
@@ -108,7 +108,7 @@ export const CRUDS = {
     endpoint: '/usuarios',
     valoresIniciais: { perfil: 'aluno' },
     // VARIABILIDADE: o perfil "Gestor" só aparece para clientes com aprovação de gestor
-    campos: ({ hasFeature }) => [
+    campos: ({ hasFeature, tenant }) => [
       // Medição (AIE "Aluno/servidor do sistema acadêmico", Camilla): escolher a matrícula preenche
       // nome e e-mail com o que o Sistema Acadêmico/RH já tem. GET /api/integracoes/pessoas.
       {
@@ -123,16 +123,17 @@ export const CRUDS = {
         nome: 'perfil', rotulo: 'Perfil', tipo: 'select', obrigatorio: true,
         opcoes: Object.entries(PERFIS)
           .filter(([codigo]) => codigo !== 'gestor' || hasFeature('approvalRequired'))
-          .map(([valor, rotulo]) => ({ valor, rotulo })),
+          .map(([valor]) => ({ valor, rotulo: rotuloPerfil(valor, tenant) })),
       },
       // Campo senha: tipo password esconde o texto; o backend nunca devolve a senha no JSON.
       { nome: 'senha', rotulo: 'Senha', tipo: 'password', ajuda: 'Mínimo 6 caracteres. Na edição, deixe em branco para manter a atual.' },
     ],
-    colunas: [
+    // colunas como função: recebe o cliente para escrever "Colaborador" na Empresa.
+    colunas: ({ tenant }) => [
       { campo: 'matricula', rotulo: 'Matrícula' },
       { campo: 'nome', rotulo: 'Nome' },
       { campo: 'email', rotulo: 'E-mail' },
-      { campo: 'perfil', rotulo: 'Perfil', formato: (v) => PERFIS[v] || v },
+      { campo: 'perfil', rotulo: 'Perfil', formato: (v) => rotuloPerfil(v, tenant) },
     ],
   },
 
@@ -162,7 +163,7 @@ export const CRUDS = {
   // ---------------- Técnico ----------------
   ocorrencias: {
     titulo: 'Ocorrências',
-    subtitulo: 'Defeitos registrados. Toda ocorrência aberta tira o equipamento de circulação (RN09).',
+    subtitulo: 'Defeitos registrados. Enquanto a ocorrência está aberta, o equipamento fica fora de circulação.',
     singular: 'Ocorrência',
     feminino: true,
     // -> /api/ocorrencias (OcorrenciaController). Criar ocorrência manda o equipamento para "Em manutenção" (RN09).
@@ -195,17 +196,17 @@ export const CRUDS = {
   // ---------------- Laura (visão administrativa das reservas) ----------------
   reservas: {
     titulo: 'Reservas',
-    subtitulo: 'Todas as reservas do cliente. O aluno também cria/cancela pelas telas dele.',
+    subtitulo: 'Todas as reservas da instituição. Alunos e professores também reservam pelas próprias telas.',
     singular: 'Reserva',
     feminino: true,
     endpoint: '/reservas',
     // "Excluir" de reserva = cancelar: o DELETE /api/reservas/{id} chama ReservaService.cancelar (fica no histórico, RN11).
     rotuloExcluir: 'Cancelar',
     // VARIABILIDADE: o campo "Centro de custo" só existe para clientes com costCenter
-    campos: ({ hasFeature }) => [
+    campos: ({ hasFeature, tenant }) => [
       {
         nome: 'usuarioId', rotulo: 'Solicitante', obrigatorio: true, somenteCriacao: true,
-        opcoesDe: { endpoint: '/usuarios', rotulo: (u) => `${u.nome} (${PERFIS[u.perfil]})` },
+        opcoesDe: { endpoint: '/usuarios', rotulo: (u) => `${u.nome} (${rotuloPerfil(u.perfil, tenant)})` },
       },
       {
         nome: 'equipamentoId', rotulo: 'Equipamento', obrigatorio: true, somenteCriacao: true,
@@ -234,12 +235,12 @@ export const CRUDS = {
   // ---------------- Módulos exclusivos (VARIABILIDADE) ----------------
   centrosCusto: {
     titulo: 'Centros de custo',
-    subtitulo: 'Exclusivo de clientes com o recurso "costCenter" (Empresa Corporativa).',
+    subtitulo: 'Áreas da empresa que respondem pelo uso dos equipamentos.',
     singular: 'Centro de custo',
     // -> /api/centros-custo. Sem o recurso costCenter o backend responde 403 e o menu esconde a tela.
     endpoint: '/centros-custo',
     // aviso = caixa de informação mostrada no topo da tela
-    aviso: 'Módulo variável: só aparece no menu e só responde no backend quando o cliente tem "Vincular reservas a centro de custo" ligado na Personalização.',
+    aviso: 'Este cadastro só existe para instituições com "Vincular reservas a centro de custo" ligado na Personalização.',
     campos: [
       { nome: 'codigo', rotulo: 'Código', placeholder: 'Ex.: CC-ENG' },
       { nome: 'nome', rotulo: 'Nome', obrigatorio: true },
@@ -252,12 +253,12 @@ export const CRUDS = {
 
   multas: {
     titulo: 'Multas por atraso',
-    subtitulo: 'Exclusivo de clientes com o recurso "lateFee" (Escola Técnica).',
+    subtitulo: 'Geradas automaticamente quando a devolução acontece depois do prazo.',
     singular: 'Multa',
     feminino: true,
     // -> /api/multas (MultaController). Sem o recurso lateFee: rota protegida no front e 403 no backend.
     endpoint: '/multas',
-    aviso: 'Personalização deste cliente: a multa é gerada automaticamente na devolução em atraso, pela estratégia MultaPorDiaDeAtraso (padrão Strategy). Clientes sem este recurso não veem este módulo.',
+    aviso: 'Este módulo só existe para instituições com "Cobrar multa por devolução em atraso" ligado na Personalização. O valor segue a regra da instituição (R$ 5,00 por dia de atraso).',
     // Ninguém cria/edita multa à mão: o valor é sempre calculado pela estratégia (CalculoMulta) do cliente.
     podeCriar: false,
     podeEditar: false,

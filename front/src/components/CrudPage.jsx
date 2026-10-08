@@ -6,13 +6,13 @@
  *  O que faz: UMA tela que serve para vários cadastros (categorias, locais, usuários, reservas,
  *  ocorrências, manutenções, centros de custo, multas). Recebe por props uma "config" que diz
  *  o endpoint, as colunas da tabela e os campos do formulário; monta a lista, a busca, o
- *  formulário de novo/editar e o botão de desativar. É o par do CrudController no backend.
+ *  formulário de novo/editar (numa gaveta lateral) e o botão de desativar. É o par do CrudController no backend.
  *  Quem chama: App.jsx (componente Crud com CRUDS[nome]) e LateFeePanel (CRUDS.multas).
  *  Chama: useApi (GET da lista), api.post/put/delete, Layout, StatusBadge, States; configs em config/crudConfigs.jsx.
  * ============================================================
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import Layout from './Layout';
 import StatusBadge from './StatusBadge';
 import { EmptyState, ErrorState, LoadingState, SuccessMessage } from './States';
@@ -45,6 +45,8 @@ export default function CrudPage({ config }) {
     () => (typeof config.campos === 'function' ? config.campos(app) : config.campos),
     [config, app]
   );
+  // "colunas" também pode ser função (app) => lista (ex.: nome do perfil muda conforme o cliente).
+  const colunas = typeof config.colunas === 'function' ? config.colunas(app) : config.colunas;
   // GET automático da lista: ex. useApi('/categorias') -> GET /api/categorias -> CrudController.listar
   // -> SELECT ... WHERE tenant_id = ? AND ativo = TRUE.
   const { dados, carregando, erro, recarregar } = useApi(config.endpoint);
@@ -75,6 +77,14 @@ export default function CrudPage({ config }) {
         .catch(() => setOpcoes((prev) => ({ ...prev, [c.nome]: [] })));
     });
   }, [campos]);
+
+  // Tecla Esc fecha a gaveta do formulário (o listener só existe enquanto ela está aberta).
+  useEffect(() => {
+    if (!form) return undefined;
+    const fechar = (e) => { if (e.key === 'Escape') setForm(null); };
+    window.addEventListener('keydown', fechar);
+    return () => window.removeEventListener('keydown', fechar);
+  }, [form]);
 
   // Filtro da caixa "Busca" feito no próprio navegador (sem ir ao backend): procura o texto em qualquer campo do registro.
   const registros = (dados || []).filter((item) =>
@@ -168,10 +178,14 @@ export default function CrudPage({ config }) {
   // Campos marcados como somenteCriacao (ex.: senha, equipamento da ocorrência) somem na edição.
   const camposVisiveis = campos.filter((c) => !(form?.id && c.somenteCriacao));
 
-  // Estrutura da tela: título + botão Novo, aviso da config, mensagens, formulário (quando aberto),
-  // barra de busca, estados (carregando/erro/vazio) e a tabela. As colunas e ações vêm da config:
+  // Estrutura da tela: título + botão Novo, aviso da config, mensagens, barra de busca, estados
+  // (carregando/erro/vazio) e a tabela. O formulário de novo/editar abre numa GAVETA lateral
+  // (a lista continua visível atrás). As colunas e ações vêm da config:
   // col.formato (formata o valor), col.badge (mostra StatusBadge), acoesExtras (botões específicos,
   // ex.: "Marcar como paga" das multas), podeEditar/podeExcluir (esconde botões).
+  const total = (dados || []).length;
+  // Telas só de consulta (ex.: histórico de manutenções) não têm botões: some a coluna "Ações".
+  const temAcoes = Boolean(config.acoesExtras) || config.podeEditar !== false || config.podeExcluir !== false;
   return (
     <Layout fullWidth>
       <div className="page-header-row">
@@ -179,7 +193,7 @@ export default function CrudPage({ config }) {
           <h1 className="page-title">{config.titulo}</h1>
           {config.subtitulo && <p className="page-subtitle">{config.subtitulo}</p>}
         </div>
-        {config.podeCriar !== false && !form && (
+        {config.podeCriar !== false && (
           <button type="button" className="btn btn-primary" onClick={abrirNovo}>
             <Plus size={18} />
             {config.rotuloNovo || `Nov${a} ${config.singular.toLowerCase()}`}
@@ -191,82 +205,103 @@ export default function CrudPage({ config }) {
       <SuccessMessage mensagem={mensagem} />
       {!form && <ErrorState mensagem={erroForm} />}
 
-      {form && (
-        <form className="card crud-form" onSubmit={salvar}>
-          <h2 className="form-section__title">{form.id ? `Editar ${config.singular.toLowerCase()}` : `Cadastrar ${config.singular.toLowerCase()}`}</h2>
-          <ErrorState mensagem={erroForm} />
-          <div className="form-row" style={{ flexWrap: 'wrap' }}>
-            {camposVisiveis.map((c) => (
-              <div className="form-group" key={c.nome} style={{ flex: c.largo ? '1 1 100%' : '1 1 240px' }}>
-                <label className="form-label" htmlFor={c.nome}>
-                  {c.rotulo}{c.obrigatorio ? ' *' : ''}
-                </label>
-                <CampoFormulario campo={c} valor={form[c.nome]} opcoes={c.opcoes || opcoes[c.nome] || []} onChange={(v) => alterarCampo(c, v)} />
-                {c.ajuda && <span className="form-hint">{c.ajuda}</span>}
-              </div>
-            ))}
-          </div>
-          <div className="form-actions">
-            <button type="button" className="btn btn-secondary" onClick={() => setForm(null)}>Cancelar</button>
-            <button type="submit" className="btn btn-primary" disabled={salvando}>
-              {salvando ? 'Salvando...' : 'Salvar'}
-            </button>
-          </div>
-        </form>
-      )}
-
+      {/* Barra de ferramentas: busca à esquerda e a contagem de registros. */}
       <div className="filters-bar">
         <div className="form-group search-filter">
-          <label className="form-label" htmlFor="busca-crud">Busca</label>
+          <label className="form-label" htmlFor="busca-crud">Buscar</label>
           <div className="form-input-wrapper">
-            <input id="busca-crud" type="search" className="form-input" placeholder="Filtrar..." value={busca}
-              onChange={(e) => setBusca(e.target.value)} style={{ paddingLeft: '40px' }} />
-            <Search size={18} style={{ position: 'absolute', left: 13, top: 14, color: 'var(--color-text-muted)' }} />
+            <Search size={17} />
+            <input id="busca-crud" type="search" className="form-input" placeholder={`Buscar em ${config.titulo.toLowerCase()}...`}
+              value={busca} onChange={(e) => setBusca(e.target.value)} style={{ paddingLeft: 38 }} />
           </div>
         </div>
       </div>
 
       {carregando && <LoadingState />}
       <ErrorState mensagem={erro} onTentarNovamente={recarregar} />
-      {!carregando && !erro && registros.length === 0 && <EmptyState>Nenhum registro encontrado.</EmptyState>}
+      {!carregando && !erro && registros.length === 0 && (
+        <EmptyState>
+          {busca ? 'Nenhum registro corresponde à busca.' : `Nenhum${config.feminino ? 'a' : ''} ${config.singular.toLowerCase()} cadastrad${a} ainda.`}
+        </EmptyState>
+      )}
 
       {!carregando && registros.length > 0 && (
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                {config.colunas.map((col) => <th key={col.campo}>{col.rotulo}</th>)}
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {registros.map((item) => (
-                <tr key={item.id}>
-                  {config.colunas.map((col) => (
-                    <td key={col.campo}>
-                      {col.formato ? col.formato(item[col.campo], item)
-                        : col.badge ? <StatusBadge status={item[col.campo]} />
-                          : item[col.campo] ?? '—'}
-                    </td>
-                  ))}
-                  <td>
-                    <div className="table-actions">
-                      {config.acoesExtras?.(item, { recarregar, setMensagem, setErro: setErroForm })}
-                      {config.podeEditar !== false && (!config.podeEditarItem || config.podeEditarItem(item)) && (
-                        <button type="button" className="btn btn-link btn-sm" onClick={() => abrirEdicao(item)}>Editar</button>
-                      )}
-                      {config.podeExcluir !== false && (!config.podeExcluirItem || config.podeExcluirItem(item)) && (
-                        <button type="button" className="btn btn-link btn-sm" onClick={() => excluir(item)}>
-                          {config.rotuloExcluir || 'Desativar'}
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  {colunas.map((col) => <th key={col.campo}>{col.rotulo}</th>)}
+                  {temAcoes && <th className="col-acoes">Ações</th>}
                 </tr>
+              </thead>
+              <tbody>
+                {registros.map((item) => (
+                  <tr key={item.id}>
+                    {colunas.map((col) => (
+                      <td key={col.campo}>
+                        {col.formato ? col.formato(item[col.campo], item)
+                          : col.badge ? <StatusBadge status={item[col.campo]} />
+                            : item[col.campo] ?? '—'}
+                      </td>
+                    ))}
+                    {temAcoes && <td className="col-acoes">
+                      <div className="table-actions">
+                        {config.acoesExtras?.(item, { recarregar, setMensagem, setErro: setErroForm })}
+                        {config.podeEditar !== false && (!config.podeEditarItem || config.podeEditarItem(item)) && (
+                          <button type="button" className="btn btn-link btn-sm" onClick={() => abrirEdicao(item)}>Editar</button>
+                        )}
+                        {config.podeExcluir !== false && (!config.podeExcluirItem || config.podeExcluirItem(item)) && (
+                          <button type="button" className="btn btn-link btn-sm" onClick={() => excluir(item)}>
+                            {config.rotuloExcluir || 'Desativar'}
+                          </button>
+                        )}
+                      </div>
+                    </td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="table-footer">
+            {busca ? `${registros.length} de ${total} registros` : `${total} registro${total === 1 ? '' : 's'}`}
+          </p>
+        </>
+      )}
+
+      {/* GAVETA do formulário: fundo escuro + painel à direita. Clicar fora ou em Cancelar fecha. */}
+      {form && (
+        <>
+          <div className="drawer-backdrop" onClick={() => setForm(null)} aria-hidden="true" />
+          <form className="drawer crud-form" onSubmit={salvar} role="dialog" aria-modal="true" aria-labelledby="titulo-form">
+            <div className="drawer__header">
+              <h2 className="drawer__title" id="titulo-form">
+                {form.id ? `Editar ${config.singular.toLowerCase()}` : `Nov${a} ${config.singular.toLowerCase()}`}
+              </h2>
+              <button type="button" className="app-header__icon-btn" onClick={() => setForm(null)} aria-label="Fechar">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="drawer__body">
+              <ErrorState mensagem={erroForm} />
+              {camposVisiveis.map((c) => (
+                <div className="form-group" key={c.nome}>
+                  <label className="form-label" htmlFor={c.nome}>
+                    {c.rotulo}{c.obrigatorio ? ' *' : ''}
+                  </label>
+                  <CampoFormulario campo={c} valor={form[c.nome]} opcoes={c.opcoes || opcoes[c.nome] || []} onChange={(v) => alterarCampo(c, v)} />
+                  {c.ajuda && <span className="form-hint">{c.ajuda}</span>}
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+            <div className="drawer__footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setForm(null)}>Cancelar</button>
+              <button type="submit" className="btn btn-primary" disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </form>
+        </>
       )}
     </Layout>
   );
