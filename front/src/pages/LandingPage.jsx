@@ -1,3 +1,15 @@
+/*
+ * ============================================================
+ *  LandingPage.jsx  |  Camada: Front-end React (página pública)
+ *  Responsável na apresentação: Todos  |  Atividade: 1 (Design Thinking)
+ * ------------------------------------------------------------
+ *  O que faz: página inicial pública (rota /) com o material da Atividade 1:
+ *  problema, público-alvo, personas, mapa de empatia e a solução proposta.
+ *  O texto de cada seção fica em data/landingContent.js (conteúdo separado da tela).
+ *  Quem chama: App.jsx, rota "/".
+ *  Chama: LandingLayout (cabeçalho e rodapé), landingContent (textos). Não chama a API.
+ * ============================================================
+ */
 import {
   AlertCircle,
   BarChart3,

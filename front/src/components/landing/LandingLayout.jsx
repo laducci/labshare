@@ -1,3 +1,14 @@
+/*
+ * ============================================================
+ *  LandingLayout.jsx  |  Camada: Front-end (componente de layout da página pública)
+ *  Responsável na apresentação: Todos  |  Atividade: 1 (Design Thinking)
+ * ------------------------------------------------------------
+ *  O que faz: cabeçalho fixo com o menu de âncoras (NAV_LINKS), menu de celular
+ *  e rodapé da página pública. O cabeçalho muda de estilo ao rolar a página.
+ *  Quem chama: pages/LandingPage.jsx.
+ *  Chama: data/landingContent.js (NAV_LINKS), React Router (Link para o login).
+ * ============================================================
+ */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';

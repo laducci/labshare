@@ -1,3 +1,13 @@
+/*
+ * ============================================================
+ *  landingContent.js  |  Camada: Front-end (dados estáticos)
+ *  Responsável na apresentação: Todos  |  Atividade: 1 (Design Thinking)
+ * ------------------------------------------------------------
+ *  O que faz: textos da página pública (menu, problema, público-alvo, personas,
+ *  mapa de empatia). Ficam separados da tela para poderem ser trocados sem mexer no JSX.
+ *  Quem chama: pages/LandingPage.jsx e components/landing/LandingLayout.jsx.
+ * ============================================================
+ */
 export const NAV_LINKS = [
   { href: '#inicio', label: 'Início' },
   { href: '#problema', label: 'Problema' },

@@ -50,19 +50,33 @@ Abra http://localhost:5173. O Vite repassa toda chamada `/api/...` para o backen
 
 ## Usuários de demonstração (senha `123456`)
 
-| Cliente | Perfil | E-mail |
-|---|---|---|
-| Universidade Padrão | Aluno | lucas@email.com |
-| Universidade Padrão | Técnico | carlos@email.com |
-| Universidade Padrão | Manutenção | fernanda@email.com |
-| Universidade Padrão | Admin | roberto@email.com |
-| Empresa Corporativa | Gestor | patricia@empresa.com |
-| Empresa Corporativa | Colaborador | bruno@empresa.com |
-| Escola Técnica | Admin | vera@escolatecnica.com |
-| Escola Técnica | Técnico | paulo@escolatecnica.com |
+A tela de login tem uma aba por cliente. Basta clicar no usuário para entrar.
 
-A tela de login tem botões de acesso rápido para cada um.
+| Cliente | Usuários |
+|---|---|
+| Universidade Padrão | Lucas (aluno), Ricardo (professor), Carlos (técnico), Fernanda (manutenção), Roberto (admin) |
+| Empresa Corporativa | Bruno (colaborador), Patrícia (gestora), Diego (técnico), Helena (admin) |
+| Escola Técnica | Igor (aluno), Paulo (técnico), Vera (admin) |
+
+O e-mail de cada um é o primeiro nome em minúsculas e sem acento: `@email.com` na Universidade, `@empresa.com` na Empresa e `@escolatecnica.com` na Escola Técnica.
 
 ## Para zerar os dados antes de uma apresentação
 
 Rode `backend/reset.sql` no SQL Editor do Neon e reinicie o backend.
+
+## Onde está cada parte da Atividade 2
+
+| Item | Onde ver no código |
+|---|---|
+| Classes principais (mais de 10) | `backend/.../model`: Equipamento, Reserva, Usuario, Categoria, Local, CentroCusto, Ocorrencia, Manutencao, Multa, Notificacao, Historico, Tenant, ItemChecklist e EntidadeBase |
+| Singleton (2) | `config/ConfiguracaoEmprestimo`, `config/FeatureFlagCache` |
+| Template Method (3) | `dao/AbstractDao`, `checklist/ProcessoChecklist`, `notificacao/NotificacaoTemplate` |
+| Strategy (3) | `variabilidade/RegraAprovacao`, `variabilidade/CalculoMulta`, `variabilidade/RegraCentroCusto` (escolhidas pelo `SeletorDeRegras`) |
+| CRUDs (2 por integrante) | Laura: Equipamentos e Reservas · João: Categorias e Locais · Camilla: Usuários e Manutenções |
+| Tabelas | `backend/src/main/resources/schema.sql` (13 tabelas) |
+| Variabilidade | Recursos por cliente na tabela `tenant_recurso`, ligados e desligados na tela Personalização |
+| Compactação de código | `AbstractDao` + `CrudController` + `CrudService` no backend; `CrudPage` + `config/crudConfigs.jsx` e `EquipmentForm` no front |
+
+## Vídeo da compactação de código
+
+Link (YouTube, não listado): _a preencher_

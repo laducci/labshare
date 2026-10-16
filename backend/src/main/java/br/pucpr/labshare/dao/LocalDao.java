@@ -4,7 +4,7 @@
  *  Responsável na apresentação: João  |  Atividade: Q2 (CRUD de Locais), Q1 (Template Method), Q3 (compactação)
  * ------------------------------------------------------------
  *  O que faz: acesso à tabela "local" (laboratórios/salas onde ficam os equipamentos).
- *  Só informa tabela, colunas (nome, descricao) e como ler a linha; o SQL do
+ *  Só informa tabela, colunas (nome, descricao, codigo_sala) e como ler a linha; o SQL do
  *  CRUD vem pronto do AbstractDao.
  *  Quem chama: LocalService (via CrudService) <- LocalController <- tela CrudPage (front).
  *  Chama: AbstractDao -> JdbcTemplate -> PostgreSQL.

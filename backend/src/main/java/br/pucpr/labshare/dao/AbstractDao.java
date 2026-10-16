@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  *   VALUES (?, ?, ?, ?, ?, ?, ...) RETURNING id
  *
  * Também é a base da COMPACTAÇÃO DE CÓDIGO: antes cada DAO tinha seu próprio
- * INSERT/UPDATE/SELECT escrito à mão (código duplicado); agora cada DAO tem ~30 linhas.
+ * INSERT/UPDATE/SELECT escrito à mão (código duplicado); agora cada DAO só tem os 4 métodos curtos.
  *
  * Generics: "T extends EntidadeBase" = T pode ser qualquer entidade (Categoria, Reserva...)
  * desde que herde de EntidadeBase, que garante os campos comuns id, tenantId e ativo.

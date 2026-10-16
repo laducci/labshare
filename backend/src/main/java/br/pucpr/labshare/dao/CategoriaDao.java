@@ -4,7 +4,7 @@
  *  Responsável na apresentação: João  |  Atividade: Q2 (CRUD de Categorias), Q1 (Template Method), Q3 (compactação)
  * ------------------------------------------------------------
  *  O que faz: acesso à tabela "categoria". Não escreve nenhum SQL: só diz ao
- *  AbstractDao o nome da tabela, as colunas (nome, icone) e como ler uma linha.
+ *  AbstractDao o nome da tabela, as colunas (nome, icone, grupo_patrimonial) e como ler uma linha.
  *  O INSERT/UPDATE/SELECT/exclusão lógica vêm prontos do AbstractDao.
  *  Quem chama: CategoriaService (via CrudService) <- CategoriaController <- tela CrudPage (front).
  *  Chama: AbstractDao -> JdbcTemplate -> PostgreSQL.
