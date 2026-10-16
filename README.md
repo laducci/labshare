@@ -79,4 +79,4 @@ Rode `backend/reset.sql` no SQL Editor do Neon e reinicie o backend.
 
 ## Vídeo da compactação de código
 
-Link (YouTube, não listado): _a preencher_
+Link (YouTube, não listado): https://youtu.be/PD4EFehdKS0
